@@ -43,9 +43,13 @@ function BigIconCircle({ icon: IconComponent, gradient, shadow }) {
       margin: "0 auto 24px",
       boxShadow: shadow,
     }}>
-      <div style={{ width: "56px", height: "56px" }}>
-        <Icon source={IconComponent} tone="base" />
-      </div>
+      <IconComponent
+        style={{
+          width: "60px",
+          height: "60px",
+          fill: "#5C6AC4",
+        }}
+      />
     </div>
   );
 }
@@ -65,9 +69,13 @@ function SmallIconBox({ icon: IconComponent, bgColor }) {
       justifyContent: "center",
       flexShrink: 0,
     }}>
-      <div style={{ width: "22px", height: "22px" }}>
-        <Icon source={IconComponent} tone="base" />
-      </div>
+      <IconComponent
+        style={{
+          width: "24px",
+          height: "24px",
+          fill: "#5C6AC4",
+        }}
+      />
     </div>
   );
 }
@@ -88,9 +96,13 @@ function MediumIconBox({ icon: IconComponent }) {
       flexShrink: 0,
       boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
     }}>
-      <div style={{ width: "28px", height: "28px" }}>
-        <Icon source={IconComponent} tone="base" />
-      </div>
+      <IconComponent
+        style={{
+          width: "30px",
+          height: "30px",
+          fill: "#5C6AC4",
+        }}
+      />
     </div>
   );
 }
@@ -119,8 +131,8 @@ export default function OnboardingFlow({ initialStep = 0 }) {
   };
 
   return (
-    <Box padding="500">
-      <div style={{ maxWidth: "780px", margin: "0 auto" }}>
+    <Box>
+      <div>
         <BlockStack gap="600">
           {/* Progress Indicator */}
           <Box paddingBlockEnd="200">
@@ -464,7 +476,7 @@ export default function OnboardingFlow({ initialStep = 0 }) {
                       justifyContent: "center",
                       margin: "0 auto 12px",
                     }}>
-                      <div style={{ width: "24px", height: "24px", filter: "invert(1)" }}>
+                      <div style={{ width: "24px", height: "24px" }}>
                         <Icon source={TargetIcon} />
                       </div>
                     </div>

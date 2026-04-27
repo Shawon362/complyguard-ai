@@ -84,6 +84,10 @@ model Merchant {
   onboardingStep  Int      @default(0)
   storeName       String?
   storeUrl        String?
+
+  plan            String   @default("free")
+  planStartDate   DateTime @default(now())
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

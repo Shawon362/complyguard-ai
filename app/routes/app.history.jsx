@@ -11,7 +11,9 @@ import {
   EmptyState,
   Icon,
   Layout,
+  Button
 } from "@shopify/polaris";
+import { downloadComplianceReport } from "../utils/generatePDF";
 import {
   ChartLineIcon,
   ArrowUpIcon,
@@ -39,7 +41,7 @@ export const loader = async ({ request }) => {
     orderBy: { createdAt: "desc" },
     take: 50,
     include: {
-      issues: { select: { id: true, status: true } },
+      issues: { orderBy: { severity: "asc" } },
     },
   });
 
@@ -119,6 +121,9 @@ function StatBlock({ icon, label, value, valueColor, suffix }) {
 // ============================================================
 export default function ScanHistory() {
   const { scans } = useLoaderData();
+  const handleDownloadPDF = (scan) => {
+    downloadComplianceReport(scan, "Your Store");
+  };
 
   // Empty state
   if (!scans || scans.length === 0) {
@@ -355,7 +360,16 @@ export default function ScanHistory() {
                                 {scan.totalProducts || 0}
                               </Text>
                             </BlockStack>
-
+                             <Button
+                              size="slim"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDownloadPDF(scan);
+                              }}
+                            >
+                              📄 PDF
+                            </Button>
                             <div style={{ width: "20px", height: "20px" }}>
                               <Icon source={ArrowRightIcon} tone="subdued" />
                             </div>

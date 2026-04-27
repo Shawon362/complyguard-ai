@@ -6,8 +6,10 @@ import {
   useNavigation,
   redirect,
 } from "react-router";
-import { Page, Layout, BlockStack } from "@shopify/polaris";
+import { Page, Layout, Card, BlockStack, Box, Button, InlineStack, Text, Banner } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
+import { downloadComplianceReport } from "../utils/generatePDF";
+import PlanUsageCard from "../components/PlanUsageCard";
 
 // ── Components Import ──
 import DeadlineBanner from "../components/DeadlineBanner";
@@ -79,6 +81,9 @@ export const loader = async ({ request }) => {
     },
   });
 
+  const { checkScanLimit } = await import("../utils/planLimits");
+  const planInfo = await checkScanLimit(prisma, shop);
+
   return {
     shop: shopInfo,
     productCount: products.length,
@@ -86,6 +91,7 @@ export const loader = async ({ request }) => {
     lastScan,
     needsOnboarding,
     onboardingStep: merchant.onboardingStep || 0,
+    planInfo,
   };
 };
 
@@ -98,6 +104,24 @@ export const action = async ({ request }) => {
 
    const formData = await request.clone().formData();
   const actionType = formData.get("actionType");
+
+  // ── Plan Limit Check (only for scan, not for onboarding actions) ──
+  if (!actionType || actionType === "scan") {
+    const { checkScanLimit } = await import("../utils/planLimits");
+    const limitCheck = await checkScanLimit(prisma, shop);
+
+    if (!limitCheck.canScan) {
+      console.log(`⛔ Scan blocked - limit exceeded for ${shop} (${limitCheck.used}/${limitCheck.limit})`);
+      return {
+        success: false,
+        limitExceeded: true,
+        planInfo: limitCheck,
+        message: `You've used all ${limitCheck.limit} scans for this month on the ${limitCheck.planName} plan. Upgrade to scan more.`,
+      };
+    }
+
+    console.log(`✅ Scan allowed - ${limitCheck.used + 1}/${limitCheck.limit} for ${shop}`);
+  }
 
   if (actionType === "complete_onboarding") {
     await prisma.merchant.update({
@@ -225,6 +249,154 @@ export const action = async ({ request }) => {
     }
   }
 
+  // ── AI Apps Detection ──
+  try {
+    const { KNOWN_AI_APPS, getAIAppSeverity, generateAIAppFix } = await import("../ai-apps-database");
+    const detectedApps = new Map();
+
+    // ── Method 1: Script Tags ──
+    try {
+      const scriptResp = await admin.graphql(`
+        query { scriptTags(first: 50) { nodes { src } } }
+      `);
+      const scriptData = await scriptResp.json();
+      const scriptTags = scriptData.data?.scriptTags?.nodes || [];
+
+      for (const tag of scriptTags) {
+        const src = (tag.src || "").toLowerCase();
+        for (const aiApp of KNOWN_AI_APPS) {
+          const handleNorm = aiApp.handle.replace(/-/g, "");
+          const nameNorm = aiApp.name.toLowerCase().replace(/[\s.]/g, "");
+          if (src.includes(aiApp.handle) || src.includes(handleNorm) || src.includes(nameNorm)) {
+            detectedApps.set(aiApp.handle, { app: aiApp, source: "script_tag" });
+          }
+        }
+      }
+      console.log(`>>> Script tags scanned: ${scriptTags.length}, detected: ${detectedApps.size}`);
+    } catch (e) {
+      console.log("ScriptTags query failed:", e.message);
+    }
+
+    // ── Method 2: Theme Files (App Embed Blocks) ──
+    try {
+      const themeResp = await admin.graphql(`
+        query {
+          themes(first: 1, roles: MAIN) {
+            nodes {
+              id
+              files(filenames: ["config/settings_data.json"], first: 1) {
+                nodes {
+                  body { ... on OnlineStoreThemeFileBodyText { content } }
+                }
+              }
+            }
+          }
+        }
+      `);
+      const themeData = await themeResp.json();
+      const themeFiles = themeData.data?.themes?.nodes?.[0]?.files?.nodes || [];
+      const settingsContent = (themeFiles[0]?.body?.content || "").toLowerCase();
+
+      for (const aiApp of KNOWN_AI_APPS) {
+        const handleNorm = aiApp.handle.replace(/-/g, "");
+        const nameNorm = aiApp.name.toLowerCase().replace(/[\s.]/g, "");
+        if (settingsContent.includes(aiApp.handle) || settingsContent.includes(handleNorm) || settingsContent.includes(nameNorm)) {
+          if (!detectedApps.has(aiApp.handle)) {
+            detectedApps.set(aiApp.handle, { app: aiApp, source: "theme_embed" });
+          }
+        }
+      }
+      console.log(`>>> Theme settings scanned, total detected: ${detectedApps.size}`);
+    } catch (e) {
+      console.log("Theme query failed:", e.message);
+    }
+
+    // ── Method 3: Storefront HTML (last resort fallback) ──
+    try {
+      const storefrontUrl = `https://${shop}/?_pf=1`; // bypass password if possible
+      console.log(`>>> Fetching storefront: ${storefrontUrl}`);
+
+      const fetchResp = await fetch(storefrontUrl, {
+        signal: AbortSignal.timeout(10000),
+        headers: { "User-Agent": "Mozilla/5.0 ComplyGuard Scanner" },
+      }).catch((err) => {
+        console.log("Fetch error:", err.message);
+        return null;
+      });
+
+      if (!fetchResp) {
+        console.log(">>> Storefront fetch returned null");
+      } else {
+        console.log(`>>> Storefront response status: ${fetchResp.status}`);
+        const html = await fetchResp.text();
+        console.log(`>>> Storefront HTML length: ${html.length} chars`);
+
+        const htmlLower = html.toLowerCase();
+
+        // Save HTML snippets for debugging
+        const tidioCheck = htmlLower.includes("tidio");
+        const widgetCheck = htmlLower.includes("widget.tidio");
+        const chatCheck = htmlLower.includes("chat") || htmlLower.includes("chatbot");
+        console.log(`>>> Debug: contains "tidio"=${tidioCheck}, "widget.tidio"=${widgetCheck}, "chat"=${chatCheck}`);
+
+        // If password protected, log that
+        if (htmlLower.includes("password") && htmlLower.includes("enter using password")) {
+          console.log(">>> ⚠️ Store is PASSWORD PROTECTED — cannot scan storefront");
+        }
+
+        // Search for AI apps
+        let storefrontDetected = 0;
+        for (const aiApp of KNOWN_AI_APPS) {
+          const searchTerms = [
+            aiApp.handle,
+            aiApp.handle.replace(/-/g, ""),
+            aiApp.name.toLowerCase().replace(/[\s.]/g, ""),
+            aiApp.name.toLowerCase(),
+          ];
+
+          const found = searchTerms.some((term) => term && htmlLower.includes(term));
+          if (found) {
+            console.log(`>>> ✓ MATCHED: ${aiApp.name} (handle: ${aiApp.handle})`);
+            if (!detectedApps.has(aiApp.handle)) {
+              detectedApps.set(aiApp.handle, { app: aiApp, source: "storefront_html" });
+              storefrontDetected++;
+            }
+          }
+        }
+        console.log(`>>> Storefront HTML scan complete. New detections: ${storefrontDetected}, Total: ${detectedApps.size}`);
+      }
+    } catch (e) {
+      console.log("Storefront fetch failed:", e.message);
+    }
+
+    // ── Generate Issues ──
+    for (const [handle, { app: aiApp, source }] of detectedApps) {
+      issues.push({
+        scanId: scan.id,
+        shop,
+        category: "ai_app_undisclosed",
+        article: "EU AI Act Article 50(1)",
+        severity: getAIAppSeverity(aiApp.riskLevel),
+        title: `AI app detected: ${aiApp.name}`,
+        description: `${aiApp.name} (${aiApp.category.replace("_", " ")}) is installed on your store. ${aiApp.disclosureRequired}\n\nUnder EU AI Act Article 50, AI tools used in customer-facing experiences must be disclosed in your Privacy Policy.\n\nDetected via: ${source.replace("_", " ")}`,
+        evidence: JSON.stringify({
+          appHandle: aiApp.handle,
+          appName: aiApp.name,
+          category: aiApp.category,
+          aiFeatures: aiApp.aiFeatures,
+          riskLevel: aiApp.riskLevel,
+          detectionSource: source,
+        }),
+        fixAvailable: true,
+        fixAction: "add_app_disclosure",
+        suggestedFix: generateAIAppFix(aiApp),
+      });
+    }
+
+    console.log(`>>> FINAL: ${detectedApps.size} AI apps detected`);
+  } catch (e) {
+    console.log("AI apps detection failed:", e.message);
+  }
   // ── Missing Alt-text ──
   for (const product of products) {
     for (const image of product.images.nodes) {
@@ -293,13 +465,18 @@ export const action = async ({ request }) => {
 // UI COMPONENT — Dashboard Layout
 // ============================================================
 export default function ComplyGuardDashboard() {
-  const { shop, productCount, totalImages, lastScan, needsOnboarding, onboardingStep } = useLoaderData();
+  const { shop, productCount, totalImages, lastScan, needsOnboarding, onboardingStep, planInfo } = useLoaderData();
   const actionData = useActionData();
   const submit = useSubmit();
   const navigation = useNavigation();
 
   const isScanning = navigation.state === "submitting";
   const currentScan = actionData?.scan || lastScan;
+
+  const handleDownloadPDF = () => {
+    if (!currentScan) return;
+    downloadComplianceReport(currentScan, shop.name);
+  };
 
   const deadline = new Date("2026-08-02T00:00:00Z");
   const now = new Date();
@@ -319,16 +496,45 @@ export default function ComplyGuardDashboard() {
     <Page title="ComplyGuard AI" fullWidth>
       <BlockStack gap="500">
         <DeadlineBanner daysLeft={daysLeft} />
-
+        {actionData?.limitExceeded && (
+          <Banner tone="critical" title="Scan Limit Reached">
+            <p>{actionData.message}</p>
+          </Banner>
+        )}
         <Layout>
           {/* Left Column */}
           <Layout.Section>
             <BlockStack gap="500">
+              <PlanUsageCard planInfo={planInfo} />
               <StoreOverviewCard
                 shopName={shop.name}
                 productCount={productCount}
                 totalImages={totalImages}
               />
+              {/* Download PDF Report Button */}
+              {currentScan && currentScan.status === "completed" && (
+                <Card>
+                  <Box padding="400">
+                    <InlineStack gap="300" align="space-between" blockAlign="center" wrap={false}>
+                      <BlockStack gap="100">
+                        <Text as="h3" variant="headingSm">
+                          📄 Compliance Report
+                        </Text>
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          Download a professional PDF report for legal review
+                        </Text>
+                      </BlockStack>
+                      <Button
+                        variant="primary"
+                        onClick={handleDownloadPDF}
+                      >
+                        Download PDF Report
+                      </Button>
+                    </InlineStack>
+                  </Box>
+                </Card>
+              )}
+
               <ScannerCard
                 onScan={handleScan}
                 isScanning={isScanning}

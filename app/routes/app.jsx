@@ -21,6 +21,7 @@ export default function App() {
           <s-app-nav>
             <s-link href="/app">Dashboard</s-link>
             <s-link href="/app/history">Scan History</s-link>
+            <s-link href="/app/pricing">Pricing</s-link>
           </s-app-nav>
           <Outlet />
         </Frame>
