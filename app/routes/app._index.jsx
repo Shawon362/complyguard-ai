@@ -10,6 +10,7 @@ import { Page, Layout, Card, BlockStack, Box, Button, InlineStack, Text, Banner 
 import { authenticate } from "../shopify.server";
 import { downloadComplianceReport } from "../utils/generatePDF";
 import PlanUsageCard from "../components/PlanUsageCard";
+import AutoFixAllCard from "../components/AutoFixAllCard";
 
 // ── Components Import ──
 import DeadlineBanner from "../components/DeadlineBanner";
@@ -541,6 +542,7 @@ export default function ComplyGuardDashboard() {
                 productCount={productCount}
                 totalImages={totalImages}
               />
+              <AutoFixAllCard scan={currentScan} planInfo={planInfo} />
               <IssuesList issues={currentScan?.issues} shopDomain={shop.myshopifyDomain} />
             </BlockStack>
           </Layout.Section>
