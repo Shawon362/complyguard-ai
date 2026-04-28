@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFetcher } from "react-router";
 import {
   Card,
@@ -50,6 +50,15 @@ export default function AutoFixAllCard({ scan, planInfo }) {
     fetcher.submit(formData, { method: "POST", action: "/app/auto-fix-all" });
     setShowResults(true);
   };
+
+  useEffect(() => {
+    if (fetcher.data?.success && fetcher.state === "idle") {
+      const timer = setTimeout(() => {
+        window.location.reload();
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [fetcher.data, fetcher.state]);
 
   return (
     <Card>

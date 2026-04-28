@@ -50,10 +50,12 @@ export const loader = async ({ request }) => {
           id
           title
           handle
-          images(first: 10) {
+          media(first: 10) {
             nodes {
-              url
-              altText
+              ... on MediaImage {
+                alt
+                image { url }
+              }
             }
           }
         }
@@ -70,15 +72,18 @@ export const loader = async ({ request }) => {
   const shopInfo = data.data.shop;
 
   let totalImages = 0;
-  products.forEach((product) => {
-    totalImages += product.images.nodes.length;
+  products.forEach((p) => {
+    totalImages += p.media.nodes.filter(m => m.image).length;
   });
 
   const lastScan = await prisma.scan.findFirst({
-    where: { shop },
+    where: { shop, status: "completed" },
     orderBy: { createdAt: "desc" },
     include: {
-      issues: { orderBy: { severity: "asc" } },
+      issues: {
+        where: { status: { in: ["open", "pending"] } },
+        orderBy: { severity: "asc" },
+      },
     },
   });
 
@@ -149,8 +154,13 @@ export const action = async ({ request }) => {
           id
           title
           handle
-          images(first: 10) {
-            nodes { url, altText }
+          media(first: 10) {
+            nodes {
+              ... on MediaImage {
+                alt
+                image { url }
+              }
+            }
           }
         }
       }
@@ -160,7 +170,9 @@ export const action = async ({ request }) => {
   const products = productData.data.products.nodes;
 
   let totalImages = 0;
-  products.forEach((p) => { totalImages += p.images.nodes.length; });
+  products.forEach((p) => {
+    totalImages += p.media.nodes.filter(m => m.image).length;
+  });
 
   const scan = await prisma.scan.create({
     data: {
@@ -400,20 +412,36 @@ export const action = async ({ request }) => {
   }
   // ── Missing Alt-text ──
   for (const product of products) {
-    for (const image of product.images.nodes) {
-      if (!image.altText || image.altText.trim() === "") {
-        issues.push({ scanId: scan.id, shop, category: "missing_alt_text", article: "EU AI Act Article 50(4)", severity: "medium", title: `Missing alt-text: "${product.title}"`, description: `Product "${product.title}" has an image without alt-text.`, evidence: JSON.stringify({ productTitle: product.title, imageUrl: image.url }), fixAvailable: true, fixAction: "add_alt_text", suggestedFix: `Add alt-text: "${product.title} (AI-generated product visualization)"` });
+      for (const mediaItem of product.media.nodes) {
+       if (!mediaItem.image) continue;
+
+        const altText = (mediaItem.alt || "").trim();
+
+        // Skip if has alt-text (compliant)
+        if (altText !== "") {
+          continue;
+        }
+        issues.push({
+          scanId: scan.id, shop, category: "missing_alt_text",
+          article: "EU AI Act Article 50(4)", severity: "medium",
+          title: `Missing alt-text: "${product.title}"`,
+          description: `Product "${product.title}" has an image without alt-text.`,
+          evidence: JSON.stringify({ productTitle: product.title, imageUrl: mediaItem.image.url }), fixAvailable: true, fixAction: "add_alt_text", suggestedFix: `Add alt-text: "${product.title} (AI-generated product visualization)"` });
       }
-    }
   }
 
   // ── AI Image Detection (max 10 images, single pass) ──
-  const allImages = [];
-  for (const product of products) {
-    for (const image of product.images.nodes) {
-      allImages.push({ url: image.url, productTitle: product.title });
+    const allImages = [];
+    for (const product of products) {
+      for (const mediaItem of product.media.nodes) {
+        if (!mediaItem.image) continue;
+        allImages.push({
+          url: mediaItem.image.url,
+          productTitle: product.title,
+          altText: mediaItem.alt,
+        });
+      }
     }
-  }
 
   const imagesToAnalyze = allImages.slice(0, 10);
   if (imagesToAnalyze.length > 0) {
@@ -422,6 +450,22 @@ export const action = async ({ request }) => {
 
     for (const result of aiResults) {
       if (result.success && result.isAI && result.confidence >= 0.55) {
+        // ── Skip if image already has AI disclosure (compliant) ──
+          const matchingImage = allImages.find((img) => img.url === result.imageUrl);
+          const altText = (matchingImage?.altText || "").toLowerCase();
+          console.log(`>>> AI Check: ${result.productTitle}`);
+          console.log(`    URL: ${result.imageUrl}`);
+          console.log(`    Alt-text: "${matchingImage?.altText || '(empty)'}"`);
+
+          const alreadyDisclosed =
+            altText.includes("ai-generated") ||
+            altText.includes("artificial intelligence") ||
+            altText.includes("ai generated");
+
+          if (alreadyDisclosed) {
+            console.log(`Skipped (already compliant): ${result.productTitle}`);
+            continue;
+          }
         issues.push({
           scanId: scan.id,
           shop,
@@ -457,7 +501,15 @@ export const action = async ({ request }) => {
 
   await prisma.scan.update({ where: { id: scan.id }, data: { status: "completed", grade, score, criticalCount, highCount, mediumCount, lowCount, completedAt: new Date() } });
 
-  const completedScan = await prisma.scan.findUnique({ where: { id: scan.id }, include: { issues: { orderBy: { severity: "asc" } } } });
+  const completedScan = await prisma.scan.findUnique({
+    where: { id: scan.id },
+    include: {
+      issues: {
+        where: { status: { in: ["open", "pending"] } },
+        orderBy: { severity: "asc" },
+      },
+    },
+  });
 
   return { success: true, scan: completedScan };
 };
