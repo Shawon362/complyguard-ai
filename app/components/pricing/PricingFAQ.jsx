@@ -4,7 +4,7 @@ import { FAQS } from "./pricingData";
 export default function PricingFAQ() {
   return (
     <Card>
-      <Box padding="500">
+      <Box>
         <BlockStack gap="400">
           <Text as="h2" variant="headingMd">
             Frequently asked questions

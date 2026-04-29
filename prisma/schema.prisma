@@ -48,6 +48,13 @@ model Scan {
   mediumCount       Int       @default(0)
   lowCount          Int       @default(0)
 
+  // Background scan progress tracking
+  currentPhase    String   @default("queued")
+  progress        Int      @default(0)
+  imagesProcessed Int      @default(0)
+  imagesTotal     Int      @default(0)
+  errorMessage    String?
+
   createdAt         DateTime  @default(now())
 
   completedAt       DateTime?
@@ -90,4 +97,26 @@ model Merchant {
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model AnalyzedImage {
+  id            String   @id @default(cuid())
+  shop          String
+  imageUrl      String
+  
+  isAI          Boolean
+  confidence    Float
+  reasoning     String?
+  
+  hasPeople     Boolean  @default(false)
+  hasText       Boolean  @default(false)
+  hasAISigns    Boolean  @default(false)
+  
+  analyzedAt    DateTime @default(now())
+  lastSeenAt    DateTime @default(now())
+  
+  // Indexes for fast lookup
+  @@unique([shop, imageUrl])
+  @@index([shop])
+  @@index([analyzedAt])
 }

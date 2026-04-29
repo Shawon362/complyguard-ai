@@ -12,6 +12,8 @@ export const PLANS = [
     popular: false,
     features: [
       { text: "1 scan per month", included: true },
+      { text: "50 products per scan", included: true },
+      { text: "50 AI image analyses", included: true },
       { text: "View detected issues", included: true },
       { text: "Compliance grade", included: true },
       { text: "Auto-Fix", included: false },
@@ -28,9 +30,11 @@ export const PLANS = [
     popular: true,
     features: [
       { text: "3 scans per month", included: true },
+      { text: "1,000 products per scan", included: true },
+      { text: "1,000 AI image analyses", included: true },
       { text: "View detected issues", included: true },
       { text: "Compliance grade", included: true },
-      { text: "Auto-Fix", included: true, badge: "Coming Soon" },
+      { text: "Auto-Fix with one click", included: true },
       { text: "PDF report", included: true },
     ],
   },
@@ -44,9 +48,11 @@ export const PLANS = [
     popular: false,
     features: [
       { text: "15 scans per month", included: true },
+      { text: "Unlimited products", included: true },
+      { text: "Unlimited AI image analyses", included: true },
       { text: "View detected issues", included: true },
       { text: "Compliance grade", included: true },
-      { text: "Auto-Fix", included: true, badge: "Coming Soon" },
+      { text: "Auto-Fix with one click", included: true },
       { text: "PDF report + priority support", included: true },
     ],
   },
@@ -62,7 +68,15 @@ export const FAQS = [
   },
   {
     q: "What is Auto-Fix?",
-    a: "One-click application of recommended disclaimers and fixes to your store. Launching soon.",
+    a: "One-click application of recommended disclaimers and fixes to your store. Updates alt-text, adds AI disclaimers to product descriptions, and injects compliance text into your Privacy Policy and Terms of Service automatically.",
+  },
+  {
+    q: "What happens if I have more than 50 products on the Free plan?",
+    a: "On the Free plan, scans cover the first 50 products in your catalog. Upgrade to Starter or Growth to scan more products at once.",
+  },
+  {
+    q: "Is 'Unlimited' really unlimited?",
+    a: "Growth plan covers practically unlimited products and images for the vast majority of stores. For very large catalogs (5000+ products), please contact us for custom enterprise pricing.",
   },
   {
     q: "What if I exceed my scan limit?",

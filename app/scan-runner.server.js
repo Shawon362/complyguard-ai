@@ -1,38 +1,44 @@
 // ============================================================
 // scan-runner.server.js
-// Background scan runner — scan চলে background-এ
-// Frontend poll করে result নেয়
 // ============================================================
 
-// In-memory store for active scans
-// Production-এ Redis ব্যবহার করবেন
 const activeScans = new Map();
 
-export function startBackgroundScan(scanId, scanFunction) {
-  activeScans.set(scanId, { status: "running", progress: 0 });
-
-  // Run scan in background (don't await)
-  scanFunction()
-    .then(() => {
-      activeScans.set(scanId, { status: "completed", progress: 100 });
-    })
-    .catch((error) => {
-      console.error("Background scan failed:", error.message);
-      activeScans.set(scanId, { status: "failed", progress: 0, error: error.message });
-    });
+// Mark a scan as running
+export function markScanRunning(scanId) {
+  activeScans.set(scanId, {
+    status: "running",
+    startedAt: Date.now(),
+  });
 }
 
-export function getScanStatus(scanId) {
-  return activeScans.get(scanId) || { status: "not_found" };
+// Mark a scan as completed
+export function markScanCompleted(scanId) {
+  activeScans.set(scanId, {
+    status: "completed",
+    completedAt: Date.now(),
+  });
+
+  setTimeout(() => activeScans.delete(scanId), 5 * 60 * 1000);
 }
 
-export function updateScanProgress(scanId, progress) {
-  const current = activeScans.get(scanId);
-  if (current) {
-    activeScans.set(scanId, { ...current, progress });
-  }
+// Mark a scan as failed
+export function markScanFailed(scanId, error) {
+  activeScans.set(scanId, {
+    status: "failed",
+    error: error?.message || "Unknown error",
+    failedAt: Date.now(),
+  });
+
+  setTimeout(() => activeScans.delete(scanId), 5 * 60 * 1000);
 }
 
-export function removeScan(scanId) {
-  activeScans.delete(scanId);
+export function getScanRunningStatus(scanId) {
+  return activeScans.get(scanId) || { status: "not_tracked" };
+}
+
+// Check if scan is currently running
+export function isScanRunning(scanId) {
+  const scan = activeScans.get(scanId);
+  return scan?.status === "running";
 }

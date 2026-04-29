@@ -62,7 +62,7 @@ export default function AutoFixAllCard({ scan, planInfo }) {
 
   return (
     <Card>
-      <Box padding="500">
+      <Box>
         <BlockStack gap="400">
           {/* Header */}
           <InlineStack gap="300" blockAlign="center">

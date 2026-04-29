@@ -5,20 +5,29 @@ export const PLAN_LIMITS = {
   free: {
     name: "Free",
     scansPerMonth: 1,
+    maxProducts: 50,
+    maxImages: 50,
     autoFix: false,
     pdfExport: false,
+    laneSpeed: "slow",
   },
   starter: {
     name: "Starter",
     scansPerMonth: 3,
+    maxProducts: 1000,
+    maxImages: 1000,
     autoFix: true,
     pdfExport: true,
+    laneSpeed: "normal",
   },
   growth: {
     name: "Growth",
     scansPerMonth: 15,
+    maxProducts: 5000,
+    maxImages: 5000,
     autoFix: true,
     pdfExport: true,
+    laneSpeed: "fast",
   },
 };
 
@@ -62,5 +71,10 @@ export async function checkScanLimit(prisma, shop) {
     canScan,
     autoFix: limits.autoFix,
     pdfExport: limits.pdfExport,
+    maxProducts: limits.maxProducts,
+    maxImages: limits.maxImages,
+    laneSpeed: limits.laneSpeed,
+    displayMaxProducts: plan === "growth" ? "Unlimited" : limits.maxProducts.toString(),
+    displayMaxImages: plan === "growth" ? "Unlimited" : limits.maxImages.toString(),
   };
 }
