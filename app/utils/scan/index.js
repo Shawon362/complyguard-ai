@@ -6,14 +6,42 @@ import { buildIssues } from "./buildIssues";
 import { calculateScore } from "./calculateScore";
 
 // ============================================================
+// Helper: Get list of categories user has acknowledged recently
+// ============================================================
+async function getAcknowledgedCategories(prisma, shop) {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const acknowledged = await prisma.issue.findMany({
+    where: {
+      shop,
+      status: "user_acknowledged",
+      acknowledgedAt: { gte: thirtyDaysAgo },
+    },
+    select: { category: true },
+    distinct: ["category"],
+  });
+
+  const categorySet = new Set(acknowledged.map((i) => i.category));
+
+  if (categorySet.size > 0) {
+    console.log(`>>> Acknowledged categories (last 30 days): ${Array.from(categorySet).join(", ")}`);
+  }
+
+  return categorySet;
+}
+
+// ============================================================
 // MAIN: Background scan orchestrator
-// Runs async, updates DB progress as it goes
 // ============================================================
 export async function runBackgroundScan({ scanId, shop, admin, prisma }) {
   console.log(`>>> Background scan started: ${scanId}`);
   markScanRunning(scanId);
 
   try {
+    // ── Get acknowledged categories (skip these in this scan) ──
+    const acknowledgedCategories = await getAcknowledgedCategories(prisma, shop);
+
     // ── Phase 1: Get plan limits ──
     await updateProgress(prisma, scanId, "fetching_products", 5);
 
@@ -58,7 +86,6 @@ export async function runBackgroundScan({ scanId, shop, admin, prisma }) {
     const imagesToAnalyze = allImages.slice(0, imageLimit);
     console.log(`>>> Total images: ${totalImagesCount}, analyzing: ${imagesToAnalyze.length}`);
 
-    // Update scan with counts
     await prisma.scan.update({
       where: { id: scanId },
       data: {
@@ -68,7 +95,7 @@ export async function runBackgroundScan({ scanId, shop, admin, prisma }) {
       },
     });
 
-    // ── Phase 6: AI Image Analysis (with progress) ──
+    // ── Phase 6: AI Image Analysis ──
     await updateProgress(prisma, scanId, "analyzing_images", 30);
 
     const { analyzeImages } = await import("../../ai-detector.server");
@@ -92,7 +119,7 @@ export async function runBackgroundScan({ scanId, shop, admin, prisma }) {
 
     // ── Phase 7: Build issues ──
     await updateProgress(prisma, scanId, "saving_results", 85);
-    const issues = await buildIssues({
+    const allIssues = await buildIssues({
       scanId,
       shop,
       products,
@@ -102,15 +129,24 @@ export async function runBackgroundScan({ scanId, shop, admin, prisma }) {
       allImages,
     });
 
-    console.log(`>>> Total issues: ${issues.length}`);
+    // ── FILTER OUT ACKNOWLEDGED CATEGORIES ──
+    const filteredIssues = allIssues.filter((issue) => {
+      if (acknowledgedCategories.has(issue.category)) {
+        console.log(`>>> Skipped (acknowledged): ${issue.title}`);
+        return false;
+      }
+      return true;
+    });
 
-    if (issues.length > 0) {
-      await prisma.issue.createMany({ data: issues });
+    console.log(`>>> Total issues: ${filteredIssues.length} (${allIssues.length - filteredIssues.length} acknowledged-skipped)`);
+
+    if (filteredIssues.length > 0) {
+      await prisma.issue.createMany({ data: filteredIssues });
     }
 
-    // ── Phase 8: Calculate score ──
+    // ── Phase 8: Calculate score (using filtered issues) ──
     await updateProgress(prisma, scanId, "saving_results", 95);
-    const scoreData = calculateScore(issues);
+    const scoreData = calculateScore(filteredIssues);
 
     // ── Phase 9: Mark complete ──
     await prisma.scan.update({

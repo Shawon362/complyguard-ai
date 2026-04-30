@@ -13,11 +13,10 @@ const COMPARISON_FEATURES = [
   { name: "Compliance grade (A–F)", values: [true, true, true] },
   { name: "Privacy Policy check", values: [true, true, true] },
   { name: "AI image detection", values: [true, true, true] },
-  { name: "Auto-Fix with one click", values: [false, true, true] },
+  { name: "Free Auto-Fixes per scan", values: ["3", "Unlimited", "Unlimited"] },
   { name: "PDF report export", values: [false, true, true] },
   { name: "Priority support", values: [false, false, true] },
 ];
-
 export default function PricingComparison() {
   return (
     <Card>

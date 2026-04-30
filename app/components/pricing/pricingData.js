@@ -16,7 +16,8 @@ export const PLANS = [
       { text: "50 AI image analyses", included: true },
       { text: "View detected issues", included: true },
       { text: "Compliance grade", included: true },
-      { text: "Auto-Fix", included: false },
+      { text: "3 free Auto-Fixes per scan", included: true },
+      { text: "Unlimited Auto-Fix", included: false },
       { text: "PDF report", included: false },
     ],
   },
@@ -34,8 +35,8 @@ export const PLANS = [
       { text: "1,000 AI image analyses", included: true },
       { text: "View detected issues", included: true },
       { text: "Compliance grade", included: true },
-      { text: "Auto-Fix with one click", included: true },
-      { text: "PDF report", included: true },
+      { text: "Unlimited Auto-Fix", included: true },
+      { text: "PDF report export", included: true },
     ],
   },
   {
@@ -52,8 +53,9 @@ export const PLANS = [
       { text: "Unlimited AI image analyses", included: true },
       { text: "View detected issues", included: true },
       { text: "Compliance grade", included: true },
-      { text: "Auto-Fix with one click", included: true },
-      { text: "PDF report + priority support", included: true },
+      { text: "Unlimited Auto-Fix", included: true },
+      { text: "PDF report export", included: true },
+      { text: "Priority email support", included: true },
     ],
   },
 ];
@@ -67,8 +69,8 @@ export const FAQS = [
     a: "Yes. Upgrade or downgrade at any time. Changes take effect immediately.",
   },
   {
-    q: "What is Auto-Fix?",
-    a: "One-click application of recommended disclaimers and fixes to your store. Updates alt-text, adds AI disclaimers to product descriptions, and injects compliance text into your Privacy Policy and Terms of Service automatically.",
+    q: "How do free Auto-Fixes work?",
+    a: "On the Free plan, you can use Auto-Fix on your top 3 most critical issues per scan — completely free. This lets you experience the magic of one-click fixes before deciding to upgrade. To fix all issues automatically, upgrade to Starter or Growth.",
   },
   {
     q: "What happens if I have more than 50 products on the Free plan?",

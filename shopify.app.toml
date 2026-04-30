@@ -34,7 +34,7 @@ api_version = "2026-07"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products,read_legal_policies,read_script_tags,read_themes"
+scopes = "write_products,read_legal_policies,write_legal_policies,read_script_tags,read_themes"
 
 [auth]
 redirect_urls = [ "https://example.com/api/auth" ]
@@ -62,3 +62,13 @@ required = true
 [metaobjects.app.example.fields.description]
 name = "Description"
 type = "multi_line_text_field"
+
+# ============================================================
+# BILLING - Subscription Plans
+# ============================================================
+
+[[application_url.subscription_plans]]
+name = "Starter"
+
+[[application_url.subscription_plans]]
+name = "Growth"

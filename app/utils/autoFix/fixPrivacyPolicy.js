@@ -1,75 +1,144 @@
 // ============================================================
-// Fix Privacy Policy — Inject AI disclosure text
+// AI disclosure text to inject
 // ============================================================
-export async function fixPrivacyPolicy(admin) {
-  // Get current policy
-  const policyQuery = await admin.graphql(`
-    query { 
-      shop { 
-        shopPolicies { 
-          type 
-          body 
-        } 
-      } 
-    }
-  `);
+const AI_DISCLOSURE_TEXT = `
 
-  const policyData = await policyQuery.json();
-  const policies = policyData.data?.shop?.shopPolicies || [];
-  const privacyPolicy = policies.find((p) => p.type === "PRIVACY_POLICY");
-
-  if (!privacyPolicy) {
-    return { 
-      success: false, 
-      message: "No Privacy Policy exists. Please create one first in Shopify Settings." 
-    };
-  }
-
-  // Skip if already has AI disclosure
-  const currentBody = (privacyPolicy.body || "").toLowerCase();
-  if (currentBody.includes("artificial intelligence") || currentBody.includes("ai-generated")) {
-    return { 
-      success: false, 
-      message: "Privacy Policy already contains AI disclosure" 
-    };
-  }
-
-  // AI disclosure text to inject
-  const aiDisclosure = `
-
-<h3>Use of Artificial Intelligence (AI)</h3>
-<p>We use artificial intelligence (AI) technologies to enhance your shopping experience, including AI-generated product visualizations, automated product recommendations, and AI-powered customer support. These systems operate in accordance with the EU AI Act (Regulation 2024/1689). You have the right to request information about automated decision-making that affects you.</p>
+<h3>AI Technology Disclosure (EU AI Act Compliance)</h3>
+<p>In accordance with the EU AI Act (Regulation 2024/1689, Article 50), we disclose the following:</p>
+<ul>
+  <li>This store may use AI-generated product images, which are clearly labeled when present.</li>
+  <li>We may use automated recommendation systems and AI-powered chatbots for customer service.</li>
+  <li>You can request information about any AI systems used in our customer interactions by contacting us.</li>
+</ul>
+<p>For more information about the EU AI Act, visit <a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj" target="_blank">EUR-Lex</a>.</p>
 `;
 
-  // Append to existing policy
-  const updatedBody = (privacyPolicy.body || "") + aiDisclosure;
-
-  // Update via mutation
-  const updateMutation = await admin.graphql(`
-    mutation shopPolicyUpdate($shopPolicy: ShopPolicyInput!) {
-      shopPolicyUpdate(shopPolicy: $shopPolicy) {
-        shopPolicy { type body }
-        userErrors { field message }
+// ============================================================
+// Fix Privacy Policy — Add AI disclosure
+// ============================================================
+export async function fixPrivacyPolicy(admin) {
+  try {
+    // ── Step 1: Get current Privacy Policy ──
+    const policyQuery = await admin.graphql(`
+      query {
+        shop {
+          shopPolicies {
+            type
+            body
+          }
+        }
       }
+    `);
+
+    const policyData = await policyQuery.json();
+    const policies = policyData.data?.shop?.shopPolicies || [];
+    const privacyPolicy = policies.find((p) => p.type === "PRIVACY_POLICY");
+
+    if (!privacyPolicy) {
+      return {
+        success: false,
+        manual: true,
+        message: "No Privacy Policy found. Please create one in Shopify Admin first.",
+        manualInstructions: getManualInstructions(),
+      };
     }
-  `, {
-    variables: {
-      shopPolicy: { 
-        type: "PRIVACY_POLICY", 
-        body: updatedBody 
+
+    const currentBody = privacyPolicy.body || "";
+
+    // Check if already has AI disclosure
+    const hasAI =
+      currentBody.toLowerCase().includes("ai-generated") ||
+      currentBody.toLowerCase().includes("artificial intelligence") ||
+      currentBody.toLowerCase().includes("ai system");
+
+    if (hasAI) {
+      return {
+        success: true,
+        message: "Privacy Policy already has AI disclosure (skipped)",
+      };
+    }
+
+    // ── Step 2: Try to update via API ──
+    const newBody = currentBody + AI_DISCLOSURE_TEXT;
+
+    const updateMutation = await admin.graphql(`
+      mutation updatePolicy($shopPolicy: ShopPolicyInput!) {
+        shopPolicyUpdate(shopPolicy: $shopPolicy) {
+          shopPolicy { id }
+          userErrors { field, message }
+        }
+      }
+    `, {
+      variables: {
+        shopPolicy: {
+          type: "PRIVACY_POLICY",
+          body: newBody,
+        },
       },
-    },
-  });
+    });
 
-  const updateResult = await updateMutation.json();
-  const errors = updateResult.data?.shopPolicyUpdate?.userErrors;
+    const updateResult = await updateMutation.json();
+    const errors = updateResult.data?.shopPolicyUpdate?.userErrors;
 
-  if (errors && errors.length > 0) {
-    return { success: false, message: errors[0].message };
+    // ── Step 3: Handle "automatic management" gracefully ──
+    if (errors && errors.length > 0) {
+      const errorMessage = errors[0].message || "";
+
+      if (errorMessage.toLowerCase().includes("automatic management")) {
+        return {
+          success: false,
+          manual: true,
+          message: "Privacy Policy is on automatic management. Manual action required.",
+          manualInstructions: getManualInstructions(),
+          disclosureText: AI_DISCLOSURE_TEXT.trim(),
+        };
+      }
+
+      return {
+        success: false,
+        message: `Failed to update: ${errorMessage}`,
+      };
+    }
+
+    return {
+      success: true,
+      message: "AI disclosure added to Privacy Policy",
+    };
+
+  } catch (error) {
+    const errMsg = error.message || "";
+    
+    if (errMsg.toLowerCase().includes("automatic management") || 
+        errMsg.toLowerCase().includes("access denied")) {
+      return {
+        success: false,
+        manual: true,
+        message: errMsg,
+        manualInstructions: getManualInstructions(),
+        disclosureText: AI_DISCLOSURE_TEXT.trim(),
+      };
+    }
+
+    return {
+      success: false,
+      message: `Privacy Policy fix failed: ${errMsg}`,
+    };
   }
+}
 
-  return { 
-    success: true, 
-    message: "Privacy Policy updated with AI disclosure" 
+// ============================================================
+// Manual instructions for users
+// ============================================================
+function getManualInstructions() {
+  return {
+    steps: [
+      "Open Shopify Admin → Settings → Policies",
+      "Click 'Privacy Policy'",
+      "If 'Automatic management' is ON, toggle it OFF",
+      "Paste the AI disclosure text below at the end of your policy",
+      "Click 'Save'",
+    ],
+    settingsUrl: "/admin/settings/legal",
+    disclosureText: AI_DISCLOSURE_TEXT.trim(),
   };
 }
