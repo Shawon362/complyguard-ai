@@ -7,6 +7,7 @@ import {
 } from "react-router";
 import { Page, Layout, Card, BlockStack, Box, Button, InlineStack, Text, Banner } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
+import { getActiveSubscriptions, getPlanKeyFromSubscriptionName } from "../utils/billing.server";
 import { downloadComplianceReport } from "../utils/generatePDF";
 import PlanUsageCard from "../components/PlanUsageCard";
 import AutoFixAllCard from "../components/AutoFixAllCard";
@@ -23,6 +24,7 @@ import IssueSummaryCard from "../components/IssueSummaryCard";
 import ScanDetailsCard from "../components/ScanDetailsCard";
 import DeadlineCountdownCard from "../components/DeadlineCountdownCard";
 import OnboardingFlow from "../components/OnboardingFlow";
+
 
 // ============================================================
 // LOADER — page load হলে data fetch করে
@@ -42,6 +44,39 @@ export const loader = async ({ request }) => {
     });
   }
   const needsOnboarding = !merchant.onboardingDone;
+
+  // ────────────────────────────────────────────────
+  // BILLING AUTO-SYNC — Verify plan matches Shopify
+  // (Backup for missed webhooks/callbacks)
+  // ────────────────────────────────────────────────
+  try {
+    const subscriptions = await getActiveSubscriptions(admin);
+    const activeSubscription = subscriptions.find((sub) => sub.status === "ACTIVE");
+
+    let actualPlan = "free";
+    if (activeSubscription) {
+      actualPlan = getPlanKeyFromSubscriptionName(activeSubscription.name);
+    }
+
+    const currentDbPlan = merchant.plan || "free";
+
+    if (currentDbPlan !== actualPlan) {
+      console.log(`>>> Plan mismatch: DB=${currentDbPlan}, Shopify=${actualPlan}. Auto-syncing...`);
+
+      merchant = await prisma.merchant.update({
+        where: { shop },
+        data: {
+          plan: actualPlan,
+          planStartDate: actualPlan !== "free" ? new Date() : null,
+        },
+      });
+
+      console.log(`✅ Plan auto-synced: ${currentDbPlan} → ${actualPlan}`);
+    }
+  } catch (syncError) {
+    console.error(">>> Auto-sync error (non-blocking):", syncError.message);
+  }
+
 
   // Continue with normal loading
   const response = await admin.graphql(`

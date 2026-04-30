@@ -21,6 +21,10 @@ api_version = "2026-07"
   uri = "/webhooks/app/scopes_update"
 
   [[webhooks.subscriptions]]
+  topics = [ "app_subscriptions/update" ]
+  uri = "/webhooks/app_subscriptions_update" 
+
+  [[webhooks.subscriptions]]
   compliance_topics = [ "customers/data_request" ]
   uri = "/webhooks/customers/data_request"
 
@@ -62,13 +66,3 @@ required = true
 [metaobjects.app.example.fields.description]
 name = "Description"
 type = "multi_line_text_field"
-
-# ============================================================
-# BILLING - Subscription Plans
-# ============================================================
-
-[[application_url.subscription_plans]]
-name = "Starter"
-
-[[application_url.subscription_plans]]
-name = "Growth"

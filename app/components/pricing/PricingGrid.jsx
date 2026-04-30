@@ -1,7 +1,7 @@
 import { PLANS } from "./pricingData";
 import PricingCard from "./PricingCard";
 
-export default function PricingGrid() {
+export default function PricingGrid({ currentPlan = "free" }) {
   return (
     <div style={{
       display: "grid",
@@ -12,7 +12,7 @@ export default function PricingGrid() {
       padding: "20px 16px",
     }}>
       {PLANS.map((plan) => (
-        <PricingCard key={plan.id} plan={plan} />
+        <PricingCard key={plan.id} plan={plan} currentPlan={currentPlan} />
       ))}
     </div>
   );

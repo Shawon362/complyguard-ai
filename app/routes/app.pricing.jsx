@@ -1,5 +1,4 @@
 import { Page, BlockStack } from "@shopify/polaris";
-import { redirect } from "react-router";
 import { authenticate } from "../shopify.server";
 import { createSubscription } from "../utils/billing.server";
 
@@ -45,8 +44,11 @@ export const action = async ({ request }) => {
     const result = await createSubscription(admin, planKey, returnUrl);
 
     console.log(`>>> Subscription created for ${shop}: plan=${planKey}, test=${result.test}`);
-
-    return redirect(result.confirmationUrl);
+    return {
+      success: true,
+      confirmationUrl: result.confirmationUrl,
+      planKey,
+    };
   } catch (error) {
     console.error("Subscription create failed:", error);
     return {

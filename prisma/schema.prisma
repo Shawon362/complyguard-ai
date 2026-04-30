@@ -98,7 +98,7 @@ model Merchant {
   storeUrl        String?
 
   plan            String   @default("free")
-  planStartDate   DateTime @default(now())
+  planStartDate   DateTime? @default(now())
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

@@ -1,10 +1,53 @@
 import { Card, BlockStack, Text, Button, InlineStack, Box, Badge, Icon } from "@shopify/polaris";
 import { CheckIcon, XIcon } from "@shopify/polaris-icons";
+import { useFetcher } from "react-router";
+import { useEffect } from "react";
 
-export default function PricingCard({ plan }) {
-  const handleClick = () => {
-    if (plan.id === "free") return;
-    alert(`Upgrade to ${plan.name} - Billing integration coming soon!`);
+export default function PricingCard({ plan, currentPlan = "free" }) {
+  const fetcher = useFetcher();
+  const isSubmitting = fetcher.state === "submitting" || fetcher.state === "loading";
+
+  useEffect(() => {
+    if (fetcher.data?.success && fetcher.data?.confirmationUrl) {
+      window.top.location.href = fetcher.data.confirmationUrl;
+    }
+  }, [fetcher.data]);
+
+  const isCurrentPlan = currentPlan === plan.id;
+  const isFreePlan = plan.id === "free";
+
+  const renderButton = () => {
+    if (isFreePlan) {
+      return (
+        <Button variant="secondary" size="large" fullWidth disabled>
+          {currentPlan === "free" ? "Current Plan" : "Free Plan"}
+        </Button>
+      );
+    }
+
+    if (isCurrentPlan) {
+      return (
+        <Button variant="secondary" tone="success" size="large" fullWidth disabled>
+          ✓ Current Plan
+        </Button>
+      );
+    }
+
+    return (
+      <fetcher.Form method="POST" action="/app/pricing">
+        <input type="hidden" name="plan" value={plan.id} />
+        <Button
+          submit
+          variant={plan.popular ? "primary" : "secondary"}
+          size="large"
+          fullWidth
+          loading={isSubmitting}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Redirecting..." : plan.cta}
+        </Button>
+      </fetcher.Form>
+    );
   };
 
   return (
@@ -49,16 +92,17 @@ export default function PricingCard({ plan }) {
               </Text>
             </InlineStack>
 
-            {/* CTA Button */}
-            <Button
-              variant={plan.popular ? "primary" : "secondary"}
-              size="large"
-              fullWidth
-              onClick={handleClick}
-              disabled={plan.id === "free"}
-            >
-              {plan.cta}
-            </Button>
+            {/* CTA Button (smart based on currentPlan) */}
+            {renderButton()}
+
+            {/* Error display if subscription create failed */}
+            {fetcher.data?.error && (
+              <Box background="bg-surface-critical-subdued" padding="300" borderRadius="200">
+                <Text as="p" variant="bodySm" tone="critical">
+                  {fetcher.data.error}
+                </Text>
+              </Box>
+            )}
 
             {/* Features */}
             <BlockStack gap="200">
