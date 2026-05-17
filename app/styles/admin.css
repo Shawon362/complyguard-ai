@@ -1,0 +1,303 @@
+/* ============================================================
+   ADMIN DASHBOARD — Design System
+   
+   COLOR REFERENCE (for future use):
+   
+   Sidebar:
+     --admin-sidebar-bg:       #1a1a1a  (dark background)
+     --admin-sidebar-text:     #ffffff  (white text)
+     --admin-sidebar-muted:    60% white opacity
+     --admin-sidebar-border:   8% white opacity
+     --admin-sidebar-hover:    6% white opacity
+     --admin-sidebar-active:   10% white opacity
+   
+   Brand:
+     --admin-brand:            #008060  (Shopify green)
+   
+   Surface:
+     --admin-surface:          #f6f6f7  (page background)
+   
+   All other colors handled by Polaris via tone props.
+   ============================================================ */
+
+:root {
+  /* ── Sidebar Theme ── */
+  --admin-sidebar-bg: #1a1a1a;
+  --admin-sidebar-text: #ffffff;
+  --admin-sidebar-text-muted: rgba(255, 255, 255, 0.6);
+  --admin-sidebar-border: rgba(255, 255, 255, 0.08);
+  --admin-sidebar-hover: rgba(255, 255, 255, 0.06);
+  --admin-sidebar-active: rgba(255, 255, 255, 0.10);
+  --admin-sidebar-width: 240px;
+
+  /* ── Brand Accent ── */
+  --admin-brand: #008060;
+  --admin-brand-hover: #006e52;
+
+  /* ── Surface ── */
+  --admin-surface: #f6f6f7;
+}
+
+/* ============================================================
+   LAYOUT: Sidebar + Main
+   ============================================================ */
+.admin-shell {
+  display: grid;
+  grid-template-columns: var(--admin-sidebar-width) 1fr;
+  min-height: 100vh;
+  background: var(--admin-surface);
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.admin-sidebar {
+  background: var(--admin-sidebar-bg);
+  color: var(--admin-sidebar-text);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.admin-sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--admin-sidebar-border);
+}
+
+.admin-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--admin-sidebar-text);
+  text-decoration: none;
+}
+
+.admin-sidebar-brand-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--admin-brand);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-sidebar-brand-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: var(--admin-sidebar-text);
+}
+
+.admin-sidebar-brand-text {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-sidebar-brand-subtext {
+  font-size: 11px;
+  color: var(--admin-sidebar-text-muted);
+  margin-top: 2px;
+}
+
+/* Navigation */
+.admin-sidebar-nav {
+  flex: 1;
+  padding: 12px 8px;
+  overflow-y: auto;
+}
+
+.admin-sidebar-nav-label {
+  padding: 12px 12px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--admin-sidebar-text-muted);
+}
+
+.admin-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 2px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.admin-nav-link:hover {
+  background: var(--admin-sidebar-hover);
+  color: var(--admin-sidebar-text);
+}
+
+.admin-nav-link.active {
+  background: var(--admin-sidebar-active);
+  color: var(--admin-sidebar-text);
+  font-weight: 500;
+}
+
+.admin-nav-link svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+/* Footer */
+.admin-sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--admin-sidebar-border);
+}
+
+.admin-user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+}
+
+.admin-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--admin-brand);
+  color: var(--admin-sidebar-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.admin-user-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--admin-sidebar-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-user-email {
+  font-size: 11px;
+  color: var(--admin-sidebar-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-logout-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid var(--admin-sidebar-border);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.admin-logout-btn:hover {
+  background: var(--admin-sidebar-hover);
+  color: var(--admin-sidebar-text);
+}
+
+.admin-logout-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+/* Main */
+.admin-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--admin-surface);
+}
+
+/* ============================================================
+   LOGIN PAGE — Only custom element
+   ============================================================ */
+.admin-login-page {
+  min-height: 100vh;
+  background: var(--admin-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.admin-login-wrapper {
+  width: 100%;
+  max-width: 440px;
+}
+
+.admin-login-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--admin-brand);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-login-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: var(--admin-sidebar-text);
+}
+
+.admin-login-footer {
+  text-align: center;
+  margin-top: 16px;
+}
+
+/* ============================================================
+   UTILITY: Stat grid (Polaris doesn't have grid layout)
+   ============================================================ */
+.admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.admin-two-col {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 16px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .admin-shell {
+    grid-template-columns: 1fr;
+  }
+  .admin-sidebar {
+    display: none;
+  }
+  .admin-two-col {
+    grid-template-columns: 1fr;
+  }
+}
