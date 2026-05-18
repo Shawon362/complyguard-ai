@@ -1,9 +1,4 @@
-import OpenAI from "openai";
-
-const client = new OpenAI({
-  apiKey: process.env.OXYY_API_KEY,
-  baseURL: "https://api.oxyy.ai/v1",
-});
+import { callWithFailover } from "./utils/admin/apiKeyManager.server";
 
 // ============================================================
 // CACHE HELPERS — Image analysis cache
@@ -212,58 +207,60 @@ async function analyzeImage(imageUrl) {
       return { success: false, isAI: false, confidence: 0, reasoning: "Download failed", indicators: [], needsReview: false };
     }
 
-    const response = await client.chat.completions.create({
-      model: "gemini-2.5-flash",
-      messages: [{
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: `Analyze this product image carefully. Return JSON only.
+const response = await callWithFailover(async (apiClient, modelName) => {
+  return await apiClient.chat.completions.create({
+    model: modelName,
+    messages: [{
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: `Analyze this product image carefully. Return JSON only.
 
-              You must distinguish between:
-              - REAL photographs (including professional product photography with studio lighting)
-              - ACTUAL AI-generated images (created by tools like Midjourney, DALL-E, Stable Diffusion)
+            You must distinguish between:
+            - REAL photographs (including professional product photography with studio lighting)
+            - ACTUAL AI-generated images (created by tools like Midjourney, DALL-E, Stable Diffusion)
 
-              IMPORTANT: Professional product photos often have:
-              - Smooth lighting (this is NORMAL, not AI)
-              - Clean backgrounds (this is NORMAL, not AI)
-              - Sharp focus and high quality (this is NORMAL, not AI)
-              - Studio setup appearance (this is NORMAL, not AI)
+            IMPORTANT: Professional product photos often have:
+            - Smooth lighting (this is NORMAL, not AI)
+            - Clean backgrounds (this is NORMAL, not AI)
+            - Sharp focus and high quality (this is NORMAL, not AI)
+            - Studio setup appearance (this is NORMAL, not AI)
 
-              DO NOT flag as AI just because:
-              - Image looks polished or professional
-              - Studio photography setup
-              - Clean white/colored background
-              - High-quality product shots
-              - Normal advertising photography
+            DO NOT flag as AI just because:
+            - Image looks polished or professional
+            - Studio photography setup
+            - Clean white/colored background
+            - High-quality product shots
+            - Normal advertising photography
 
-              ONLY flag as AI-generated if you see CLEAR signs:
-              - Distorted or melted text/numbers (very common AI failure)
-              - Unnaturally smooth/airbrushed skin (uncanny valley)
-              - Extra/missing fingers or limbs
-              - Impossible physics (objects floating, melting)
-              - Surreal/dreamlike scenes that couldn't be photographed
-              - Inconsistent lighting (shadows from multiple impossible directions)
-              - Garbled details in background (AI struggles with backgrounds)
-              - Identifiable AI art style (Midjourney/DALL-E aesthetic)
+            ONLY flag as AI-generated if you see CLEAR signs:
+            - Distorted or melted text/numbers (very common AI failure)
+            - Unnaturally smooth/airbrushed skin (uncanny valley)
+            - Extra/missing fingers or limbs
+            - Impossible physics (objects floating, melting)
+            - Surreal/dreamlike scenes that couldn't be photographed
+            - Inconsistent lighting (shadows from multiple impossible directions)
+            - Garbled details in background (AI struggles with backgrounds)
+            - Identifiable AI art style (Midjourney/DALL-E aesthetic)
 
-              Q1: Does this contain PEOPLE? (true/false)
-              Q2: Does this contain visible TEXT? (true/false)
-              Q3: Are there CLEAR signs of AI generation (not just "too polished")? (true/false)
+            Q1: Does this contain PEOPLE? (true/false)
+            Q2: Does this contain visible TEXT? (true/false)
+            Q3: Are there CLEAR signs of AI generation (not just "too polished")? (true/false)
 
-              Return JSON only:
-              {"hasPeople":true,"hasText":true,"hasAISigns":true,"observations":"specific reason if AI signs detected, OR 'real photograph' if no AI signs"}`,
-          },
-          {
-            type: "image_url",
-            image_url: { url: `data:${imgData.contentType};base64,${imgData.base64}` },
-          },
-        ],
-      }],
-      temperature: 0,
-      max_tokens: 1000,
-    });
+            Return JSON only:
+            {"hasPeople":true,"hasText":true,"hasAISigns":true,"observations":"specific reason if AI signs detected, OR 'real photograph' if no AI signs"}`,
+        },
+        {
+          type: "image_url",
+          image_url: { url: `data:${imgData.contentType};base64,${imgData.base64}` },
+        },
+      ],
+    }],
+    temperature: 0,
+    max_tokens: 1000,
+  });
+});
 
     const content = response.choices[0]?.message?.content || "";
     const result = parseGeminiJSON(content);

@@ -20,6 +20,7 @@ import {
   Icon,
 } from "@shopify/polaris";
 import { SearchIcon, ViewIcon } from "@shopify/polaris-icons";
+const { checkScanLimit } = await import("../utils/planLimits");
 
 // ============================================================
 // LOADER
@@ -45,26 +46,32 @@ export const loader = async ({ request }) => {
     orderBy: { createdAt: "desc" },
   });
 
-  const merchantsWithStats = await Promise.all(
-    merchants.map(async (m) => {
-      const scanCount = await prisma.scan.count({ where: { shop: m.shop } });
-      const issueCount = await prisma.issue.count({
-        where: { shop: m.shop, status: "open" },
-      });
-      const lastScan = await prisma.scan.findFirst({
-        where: { shop: m.shop },
-        orderBy: { createdAt: "desc" },
-        select: { createdAt: true },
-      });
+ const merchantsWithStats = await Promise.all(
+  merchants.map(async (m) => {
+    const scanCount = await prisma.scan.count({ where: { shop: m.shop } });
+    const issueCount = await prisma.issue.count({
+      where: { shop: m.shop, status: "open" },
+    });
+    const lastScan = await prisma.scan.findFirst({
+      where: { shop: m.shop },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    });
 
-      return {
-        ...m,
-        scanCount,
-        openIssues: issueCount,
-        lastScanDate: lastScan?.createdAt || null,
-      };
-    })
-  );
+    const limitInfo = await checkScanLimit(prisma, m.shop);
+
+    return {
+      ...m,
+      scanCount,
+      openIssues: issueCount,
+      lastScanDate: lastScan?.createdAt || null,
+      quotaUsed: limitInfo.used,
+      quotaLimit: limitInfo.limit,
+      canScan: limitInfo.canScan,
+      isOverride: limitInfo.isOverride,
+    };
+  })
+);
 
   const totals = {
     all: await prisma.merchant.count(),
@@ -216,6 +223,28 @@ export default function AdminMerchants() {
             </Button>
           </Link>
         </IndexTable.Cell>
+        <IndexTable.Cell>
+          <InlineStack gap="100" blockAlign="center">
+            <Text
+              as="span"
+              variant="bodyMd"
+              tone={!merchant.canScan ? "critical" : undefined}
+              fontWeight={!merchant.canScan ? "semibold" : undefined}
+            >
+              {merchant.quotaUsed}/{merchant.quotaLimit}
+            </Text>
+            {merchant.isOverride && (
+              <Badge tone="info" size="small">
+                Custom
+              </Badge>
+            )}
+            {!merchant.canScan && (
+              <Badge tone="critical" size="small">
+                At limit
+              </Badge>
+            )}
+          </InlineStack>
+        </IndexTable.Cell>
       </IndexTable.Row>
     );
   });
@@ -316,6 +345,7 @@ export default function AdminMerchants() {
                   { title: "Plan" },
                   { title: "Scans" },
                   { title: "Open Issues" },
+                  { title: "Quota" }, 
                   { title: "Last Activity" },
                   { title: "Joined" },
                   { title: "" },

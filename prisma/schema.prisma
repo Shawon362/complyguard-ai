@@ -175,3 +175,34 @@ model AdminAuditLog {
   @@index([createdAt])
   @@index([adminEmail])
 }
+
+model ApiKey {
+  id              String   @id @default(cuid())
+  name            String
+  provider        String
+  apiKey          String   
+  baseUrl         String?
+  modelName       String 
+  
+  priority        Int      @default(100) 
+  isActive        Boolean  @default(true)
+  
+  // Tracking
+  totalCalls      Int      @default(0)
+  totalErrors     Int      @default(0)
+  lastUsedAt      DateTime?
+  lastErrorAt     DateTime?
+  lastErrorMessage String?
+  lastTestedAt    DateTime?
+  lastTestSuccess Boolean?
+  
+  // Audit
+  createdBy       String 
+  notes           String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([provider, priority])
+  @@index([isActive])
+}

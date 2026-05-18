@@ -10,6 +10,7 @@ import {
   SettingsIcon,
   ExitIcon,
   AlertDiamondIcon,
+  KeyIcon
 } from "@shopify/polaris-icons";
 
 import adminStyles from "../styles/admin.css?url";
@@ -42,6 +43,7 @@ const NAV_MAIN = [
 ];
 
 const NAV_SYSTEM = [
+  { to: "/admin/api-keys", label: "API Keys", icon: KeyIcon },
   { to: "/admin/settings", label: "Settings", icon: SettingsIcon },
 ];
 
