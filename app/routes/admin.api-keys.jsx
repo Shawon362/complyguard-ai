@@ -27,9 +27,6 @@ import {
 } from "@shopify/polaris";
 import {
   KeyIcon,
-  CheckIcon,
-  XIcon,
-  AlertTriangleIcon,
   DeleteIcon,
   EditIcon,
 } from "@shopify/polaris-icons";
@@ -38,6 +35,7 @@ import { PROVIDERS } from "../utils/admin/apiProviders";
 import {
   getApiKeysHealth,
   testApiKey,
+  invalidateKeysCache,
 } from "../utils/admin/apiKeyManager.server";
 
 // ============================================================
@@ -119,6 +117,7 @@ export const action = async ({ request }) => {
         details: JSON.stringify({ keyId: created.id, name, provider }),
       },
     });
+    invalidateKeysCache();
 
     return { intent: "create", success: true, message: `API Key "${name}" added successfully` };
   }
@@ -156,7 +155,7 @@ export const action = async ({ request }) => {
         details: JSON.stringify({ keyId: id, name }),
       },
     });
-
+    invalidateKeysCache();
     return { intent: "update", success: true, message: `API Key "${name}" updated` };
   }
 
@@ -178,7 +177,7 @@ export const action = async ({ request }) => {
         details: JSON.stringify({ keyId: id, name: key.name }),
       },
     });
-
+    invalidateKeysCache();
     return {
       intent: "toggle",
       success: true,
@@ -201,7 +200,7 @@ export const action = async ({ request }) => {
         details: JSON.stringify({ name: key.name, provider: key.provider }),
       },
     });
-
+    invalidateKeysCache();
     return { intent: "delete", success: true, message: `API Key "${key.name}" deleted` };
   }
 
