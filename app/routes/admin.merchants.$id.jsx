@@ -600,6 +600,7 @@ import {
   AlertTriangleIcon,
   CalendarIcon,
 } from "@shopify/polaris-icons";
+const { checkScanLimit } = await import("../utils/planLimits");
 
 // ============================================================
 // LOADER
@@ -607,7 +608,6 @@ import {
 export const loader = async ({ params }) => {
   const prismaModule = await import("../db.server");
   const prisma = prismaModule.default;
-  const { checkScanLimit } = await import("../utils/planLimits");
 
   const merchantId = params.id;
 
