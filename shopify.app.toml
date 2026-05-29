@@ -2,12 +2,11 @@
 
 client_id = "0b6ffdf911d62c24566813f8e2b636db"
 name = "complyguard-ai"
-application_url = "https://example.com"
+application_url = "https://api.tryoxyy.com"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
-include_config_on_deploy = true
 
 [webhooks]
 api_version = "2026-07"
@@ -41,7 +40,11 @@ api_version = "2026-07"
 scopes = "write_products,read_legal_policies,write_legal_policies,read_script_tags,read_themes"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [
+  "https://api.tryoxyy.com/auth/callback",
+  "https://api.tryoxyy.com/auth/shopify/callback",
+  "https://api.tryoxyy.com/api/auth/callback"
+]
 
 [product.metafields.app.demo_info]
 type = "single_line_text_field"
