@@ -8,6 +8,7 @@
     "seed-merchants": "node scripts/seed-test-merchants.js",
     "debug-usage": "node scripts/debug-usage.js",
     "test-quota": "node scripts/test-quota.js",
+    "reset-admin-password": "node scripts/reset-admin-password.js",
     "migrate-api-key": "node scripts/migrate-api-key.js",
     "reset-stuck-scans": "node scripts/reset-stuck-scans.js",
     "config:link": "shopify app config link",
