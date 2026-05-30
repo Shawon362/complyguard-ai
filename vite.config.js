@@ -51,6 +51,7 @@ export default defineConfig({
   plugins: [reactRouter(), tsconfigPaths()],
   build: {
     assetsInlineLimit: 0,
+    target: "esnext",
   },
   optimizeDeps: {
     include: ["@shopify/app-bridge-react"],

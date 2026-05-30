@@ -24,6 +24,7 @@ import IssueSummaryCard from "../components/IssueSummaryCard";
 import ScanDetailsCard from "../components/ScanDetailsCard";
 import DeadlineCountdownCard from "../components/DeadlineCountdownCard";
 import OnboardingFlow from "../components/OnboardingFlow";
+ const { checkScanLimit } = await import("../utils/planLimits");
 
 
 // ============================================================
@@ -130,7 +131,6 @@ export const loader = async ({ request }) => {
     select: { id: true, status: true, currentPhase: true, progress: true },
   });
 
-  const { checkScanLimit } = await import("../utils/planLimits");
   const planInfo = await checkScanLimit(prisma, shop);
 
   return {
@@ -176,7 +176,7 @@ export const action = async ({ request }) => {
   }
 
   // Plan limit check
-  const { checkScanLimit } = await import("../utils/planLimits");
+  // const { checkScanLimit } = await import("../utils/planLimits");
   const limitCheck = await checkScanLimit(prisma, shop);
 
   if (!limitCheck.canScan) {
