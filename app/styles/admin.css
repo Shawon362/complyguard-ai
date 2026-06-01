@@ -75,8 +75,8 @@
 }
 
 .admin-sidebar-brand-icon {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   background: var(--admin-brand);
   border-radius: 6px;
   display: flex;
@@ -85,8 +85,8 @@
 }
 
 .admin-sidebar-brand-icon svg {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   fill: var(--admin-sidebar-text);
 }
 
@@ -227,10 +227,14 @@
 }
 
 /* Main */
-.admin-main {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+.admin-main .Polaris-Page--fullWidth,
+.admin-main .Polaris-Page {
+  max-width: 100%;
+  margin-bottom: 20px;
+}
+ .admin-main {
+  --pc-page-max-width: 100%;
+  --p-page-max-width: 100%;
   background: var(--admin-surface);
 }
 
@@ -277,13 +281,14 @@
    ============================================================ */
 .admin-stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
+  width: 100%;
 }
 
 .admin-two-col {
   display: grid;
-  grid-template-columns: 1fr 2fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -291,13 +296,24 @@
    RESPONSIVE
    ============================================================ */
 @media (max-width: 768px) {
+  .admin-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .admin-main .Polaris-Page {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .admin-main .Polaris-Page  > .Polaris-Box{
+    padding-left: 0px;
+    padding-right: 0px;
+  }
+  .admin-two-col {
+    grid-template-columns: 1fr;
+  }
   .admin-shell {
     grid-template-columns: 1fr;
   }
   .admin-sidebar {
     display: none;
-  }
-  .admin-two-col {
-    grid-template-columns: 1fr;
   }
 }

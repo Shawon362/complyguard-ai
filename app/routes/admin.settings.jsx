@@ -350,8 +350,10 @@ export default function AdminSettings() {
             {/* System Stats */}
             <Card>
               <BlockStack gap="400">
-                <InlineStack gap="200" blockAlign="center">
-                  <Icon source={SettingsIcon} tone="base" />
+                <InlineStack gap="100" align="start" blockAlign="center">
+                  <div style={{ width: "20px", display: "flex", alignItems: "center" }}>
+                    <Icon source={SettingsIcon} tone="base" />
+                  </div>
                   <Text as="h3" variant="headingMd">
                     System Statistics
                   </Text>
@@ -391,8 +393,10 @@ export default function AdminSettings() {
             {/* API Configuration */}
             <Card>
               <BlockStack gap="400">
-                <InlineStack gap="200" blockAlign="center">
-                  <Icon source={KeyIcon} tone="base" />
+                <InlineStack gap="100" align="start" blockAlign="center">
+                  <div style={{ width: "20px", display: "flex", alignItems: "center" }}>
+                    <Icon source={KeyIcon} tone="base" />
+                  </div>
                   <Text as="h3" variant="headingMd">
                     API Configuration
                   </Text>
@@ -429,8 +433,10 @@ export default function AdminSettings() {
             <Box padding="400">
               <InlineStack align="space-between" blockAlign="center">
                 <BlockStack gap="100">
-                  <InlineStack gap="200" blockAlign="center">
-                    <Icon source={PersonIcon} tone="base" />
+                  <InlineStack gap="100" align="start" blockAlign="center">
+                    <div style={{ width: "20px", display: "flex", alignItems: "center" }}>
+                      <Icon source={PersonIcon} tone="base" />
+                    </div>
                     <Text as="h3" variant="headingMd">
                       Admin Users
                     </Text>
@@ -469,8 +475,10 @@ export default function AdminSettings() {
         <Layout.Section>
           <Card padding="0">
             <Box padding="400">
-              <InlineStack gap="200" blockAlign="center">
-                <Icon source={ClockIcon} tone="base" />
+              <InlineStack gap="100" align="start" blockAlign="start">
+                <div style={{ width: "20px", display: "flex", alignItems: "start" }}>
+                   <Icon source={ClockIcon} tone="base" />
+                </div>
                 <BlockStack gap="100">
                   <Text as="h3" variant="headingMd">
                     Audit Log
@@ -506,8 +514,10 @@ export default function AdminSettings() {
         <Layout.Section>
           <Card>
             <BlockStack gap="400">
-              <InlineStack gap="200" blockAlign="center">
-                <Icon source={AlertTriangleIcon} tone="critical" />
+              <InlineStack gap="100" align="start" blockAlign="start">
+                <div style={{ width: "20px", display: "flex", alignItems: "start" }}>
+                   <Icon source={AlertTriangleIcon} tone="critical" />
+                </div>
                 <Text as="h3" variant="headingMd">
                   Danger Zone
                 </Text>

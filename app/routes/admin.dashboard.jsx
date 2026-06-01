@@ -142,7 +142,7 @@ export default function AdminDashboard() {
       subtitle="Here's what's happening with ComplyGuard AI today."
       fullWidth
     >
-      <Layout>
+      <Layout fluid>
         {/* Stat Cards */}
         <Layout.Section>
           <div className="admin-stat-grid">

@@ -1,9 +1,5 @@
 import { useState, useCallback } from "react";
-import {
-  useLoaderData,
-  useSearchParams,
-  Link,
-} from "react-router";
+import { useLoaderData, useSearchParams, Link } from "react-router";
 import {
   Page,
   Card,
@@ -18,9 +14,11 @@ import {
   EmptyState,
   IndexTable,
   Icon,
+  useBreakpoints,
 } from "@shopify/polaris";
 import { SearchIcon, ViewIcon } from "@shopify/polaris-icons";
-const { checkScanLimit } = await import("../utils/planLimits");
+
+import { checkScanLimit } from "../utils/planLimits";
 
 // ============================================================
 // LOADER
@@ -46,32 +44,32 @@ export const loader = async ({ request }) => {
     orderBy: { createdAt: "desc" },
   });
 
- const merchantsWithStats = await Promise.all(
-  merchants.map(async (m) => {
-    const scanCount = await prisma.scan.count({ where: { shop: m.shop } });
-    const issueCount = await prisma.issue.count({
-      where: { shop: m.shop, status: "open" },
-    });
-    const lastScan = await prisma.scan.findFirst({
-      where: { shop: m.shop },
-      orderBy: { createdAt: "desc" },
-      select: { createdAt: true },
-    });
+  const merchantsWithStats = await Promise.all(
+    merchants.map(async (m) => {
+      const scanCount = await prisma.scan.count({ where: { shop: m.shop } });
+      const issueCount = await prisma.issue.count({
+        where: { shop: m.shop, status: "open" },
+      });
+      const lastScan = await prisma.scan.findFirst({
+        where: { shop: m.shop },
+        orderBy: { createdAt: "desc" },
+        select: { createdAt: true },
+      });
 
-    const limitInfo = await checkScanLimit(prisma, m.shop);
+      const limitInfo = await checkScanLimit(prisma, m.shop);
 
-    return {
-      ...m,
-      scanCount,
-      openIssues: issueCount,
-      lastScanDate: lastScan?.createdAt || null,
-      quotaUsed: limitInfo.used,
-      quotaLimit: limitInfo.limit,
-      canScan: limitInfo.canScan,
-      isOverride: limitInfo.isOverride,
-    };
-  })
-);
+      return {
+        ...m,
+        scanCount,
+        openIssues: issueCount,
+        lastScanDate: lastScan?.createdAt || null,
+        quotaUsed: limitInfo.used,
+        quotaLimit: limitInfo.limit,
+        canScan: limitInfo.canScan,
+        isOverride: limitInfo.isOverride,
+      };
+    })
+  );
 
   const totals = {
     all: await prisma.merchant.count(),
@@ -101,7 +99,7 @@ function formatDate(date) {
 }
 
 function getDaysAgo(date) {
-  if (!date) return null;
+  if (!date) return "Never";
   const days = Math.floor((Date.now() - new Date(date).getTime()) / 86400000);
   if (days === 0) return "Today";
   if (days === 1) return "Yesterday";
@@ -121,12 +119,113 @@ function PlanBadge({ plan }) {
 }
 
 // ============================================================
+// MOBILE: Merchant Card Component
+// ============================================================
+function MerchantCard({ merchant, isLast }) {
+  const detailUrl = `/admin/merchants/${merchant.id}`;
+
+  return (
+    <Box
+      padding="400"
+      borderBlockEndWidth={isLast ? "0" : "025"}
+      borderColor="border"
+    >
+      <BlockStack gap="300">
+        {/* Header: Shop name + Plan badge */}
+        <InlineStack align="space-between" blockAlign="start" gap="200" wrap={false}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <Link
+              to={detailUrl}
+              style={{
+                color: "var(--p-color-text-link, #005bd3)",
+                textDecoration: "none",
+                fontWeight: 600,
+                fontSize: "14px",
+                wordBreak: "break-word",
+              }}
+            >
+              {merchant.shop}
+            </Link>
+          </div>
+          <PlanBadge plan={merchant.plan} />
+        </InlineStack>
+
+        {/* Stats: 3 columns */}
+        <InlineStack gap="400" wrap={false}>
+          <StatBlock label="Scans" value={merchant.scanCount} />
+          <StatBlock
+            label="Open Issues"
+            value={merchant.openIssues}
+            isWarning={merchant.openIssues > 0}
+          />
+          <StatBlock
+            label="Quota"
+            value={`${merchant.quotaUsed}/${merchant.quotaLimit}`}
+            isCritical={!merchant.canScan}
+          />
+        </InlineStack>
+
+        {/* Badges row (if any) */}
+        {(merchant.isOverride || !merchant.canScan) && (
+          <InlineStack gap="100" wrap>
+            {merchant.isOverride && (
+              <Badge tone="info" size="small">Custom limit</Badge>
+            )}
+            {!merchant.canScan && (
+              <Badge tone="critical" size="small">At limit</Badge>
+            )}
+          </InlineStack>
+        )}
+
+        {/* Footer: Dates + View button */}
+        <InlineStack align="space-between" blockAlign="center" gap="200" wrap>
+          <BlockStack gap="050">
+            <Text as="span" variant="bodySm" tone="subdued">
+              Last activity: {getDaysAgo(merchant.lastScanDate)}
+            </Text>
+            <Text as="span" variant="bodySm" tone="subdued">
+              Joined: {formatDate(merchant.createdAt)}
+            </Text>
+          </BlockStack>
+          <Link to={detailUrl} style={{ textDecoration: "none" }}>
+            <Button size="slim" icon={ViewIcon}>
+              View
+            </Button>
+          </Link>
+        </InlineStack>
+      </BlockStack>
+    </Box>
+  );
+}
+
+function StatBlock({ label, value, isCritical, isWarning }) {
+  return (
+    <BlockStack gap="050">
+      <Text as="span" variant="bodySm" tone="subdued">
+        {label}
+      </Text>
+      <Text
+        as="span"
+        variant="bodyMd"
+        fontWeight="semibold"
+        tone={isCritical ? "critical" : isWarning ? "caution" : undefined}
+      >
+        {value}
+      </Text>
+    </BlockStack>
+  );
+}
+
+// ============================================================
 // COMPONENT
 // ============================================================
 export default function AdminMerchants() {
   const { merchants, totals, search, planFilter } = useLoaderData();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchInput, setSearchInput] = useState(search);
+
+  // 🆕 Detect mobile breakpoint
+  const { mdDown } = useBreakpoints();
 
   const handleSearchChange = useCallback(
     (value) => {
@@ -167,16 +266,13 @@ export default function AdminMerchants() {
     plural: "merchants",
   };
 
-  // Build rows with Link in Shop column
+  // Desktop table rows (Column order FIXED to match headers)
   const rowMarkup = merchants.map((merchant, index) => {
     const detailUrl = `/admin/merchants/${merchant.id}`;
 
     return (
-      <IndexTable.Row
-        id={merchant.id}
-        key={merchant.id}
-        position={index}
-      >
+      <IndexTable.Row id={merchant.id} key={merchant.id} position={index}>
+        {/* 1. Shop */}
         <IndexTable.Cell>
           <Link
             to={detailUrl}
@@ -189,14 +285,20 @@ export default function AdminMerchants() {
             {merchant.shop}
           </Link>
         </IndexTable.Cell>
+
+        {/* 2. Plan */}
         <IndexTable.Cell>
           <PlanBadge plan={merchant.plan} />
         </IndexTable.Cell>
+
+        {/* 3. Scans */}
         <IndexTable.Cell>
           <Text as="span" variant="bodyMd">
             {merchant.scanCount}
           </Text>
         </IndexTable.Cell>
+
+        {/* 4. Open Issues */}
         <IndexTable.Cell>
           {merchant.openIssues > 0 ? (
             <Badge tone="warning">{`${merchant.openIssues} open`}</Badge>
@@ -206,25 +308,10 @@ export default function AdminMerchants() {
             </Text>
           )}
         </IndexTable.Cell>
+
+        {/* 5. Quota (FIXED — was in wrong position) */}
         <IndexTable.Cell>
-          <Text as="span" variant="bodyMd" tone="subdued">
-            {getDaysAgo(merchant.lastScanDate) || "Never"}
-          </Text>
-        </IndexTable.Cell>
-        <IndexTable.Cell>
-          <Text as="span" variant="bodyMd" tone="subdued">
-            {formatDate(merchant.createdAt)}
-          </Text>
-        </IndexTable.Cell>
-        <IndexTable.Cell>
-          <Link to={detailUrl}>
-            <Button size="slim" icon={ViewIcon}>
-              View
-            </Button>
-          </Link>
-        </IndexTable.Cell>
-        <IndexTable.Cell>
-          <InlineStack gap="100" blockAlign="center">
+          <InlineStack gap="100" blockAlign="center" wrap={false}>
             <Text
               as="span"
               variant="bodyMd"
@@ -234,16 +321,35 @@ export default function AdminMerchants() {
               {merchant.quotaUsed}/{merchant.quotaLimit}
             </Text>
             {merchant.isOverride && (
-              <Badge tone="info" size="small">
-                Custom
-              </Badge>
+              <Badge tone="info" size="small">Custom</Badge>
             )}
             {!merchant.canScan && (
-              <Badge tone="critical" size="small">
-                At limit
-              </Badge>
+              <Badge tone="critical" size="small">At limit</Badge>
             )}
           </InlineStack>
+        </IndexTable.Cell>
+
+        {/* 6. Last Activity */}
+        <IndexTable.Cell>
+          <Text as="span" variant="bodyMd" tone="subdued">
+            {getDaysAgo(merchant.lastScanDate)}
+          </Text>
+        </IndexTable.Cell>
+
+        {/* 7. Joined */}
+        <IndexTable.Cell>
+          <Text as="span" variant="bodyMd" tone="subdued">
+            {formatDate(merchant.createdAt)}
+          </Text>
+        </IndexTable.Cell>
+
+        {/* 8. View button */}
+        <IndexTable.Cell>
+          <Link to={detailUrl}>
+            <Button size="slim" icon={ViewIcon}>
+              View
+            </Button>
+          </Link>
         </IndexTable.Cell>
       </IndexTable.Row>
     );
@@ -267,6 +373,7 @@ export default function AdminMerchants() {
       <Layout>
         <Layout.Section>
           <Card padding="0">
+            {/* Search + Filter Bar */}
             <Box padding="400" borderBlockEndWidth="025" borderColor="border">
               <BlockStack gap="300">
                 <TextField
@@ -281,7 +388,8 @@ export default function AdminMerchants() {
                   autoComplete="off"
                 />
 
-                <InlineStack gap="200" align="start" blockAlign="center">
+                {/* 🆕 wrap={true} → mobile-এ chips wrap হবে */}
+                <InlineStack gap="200" align="start" blockAlign="center" wrap>
                   <Text as="span" variant="bodySm" tone="subdued">
                     Plan:
                   </Text>
@@ -311,6 +419,7 @@ export default function AdminMerchants() {
               </BlockStack>
             </Box>
 
+            {/* Conditional: Empty / Mobile Cards / Desktop Table */}
             {merchants.length === 0 ? (
               <Box padding="800">
                 <EmptyState
@@ -335,7 +444,19 @@ export default function AdminMerchants() {
                   )}
                 </EmptyState>
               </Box>
+            ) : mdDown ? (
+              /* 🆕 MOBILE: Card list */
+              <BlockStack gap="0">
+                {merchants.map((merchant, idx) => (
+                  <MerchantCard
+                    key={merchant.id}
+                    merchant={merchant}
+                    isLast={idx === merchants.length - 1}
+                  />
+                ))}
+              </BlockStack>
             ) : (
+              /* DESKTOP: Index table */
               <IndexTable
                 resourceName={resourceName}
                 itemCount={merchants.length}
@@ -345,7 +466,7 @@ export default function AdminMerchants() {
                   { title: "Plan" },
                   { title: "Scans" },
                   { title: "Open Issues" },
-                  { title: "Quota" }, 
+                  { title: "Quota" },
                   { title: "Last Activity" },
                   { title: "Joined" },
                   { title: "" },
