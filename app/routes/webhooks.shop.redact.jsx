@@ -12,41 +12,54 @@ export const action = async ({ request }) => {
     console.log(`🗑️ GDPR Webhook: ${topic} for ${shop}`);
 
     const shopDomain = payload?.shop_domain || shop;
+    const shopId = payload?.shop_id;
+
+    console.log(`Shop redact request: shop=${shopDomain}, id=${shopId}`);
 
     const prismaModule = await import("../db.server");
     const prisma = prismaModule.default;
 
-    // ── DELETE ALL data for this shop ──
+    // ── Delete ALL data for this shop in parallel (faster) ──
     try {
-      // 1. Delete all Issues for this shop
-      const deletedIssues = await prisma.issue.deleteMany({
-        where: { shop: shopDomain },
-      });
-      console.log(`Deleted ${deletedIssues.count} issues`);
+      const startTime = Date.now();
 
-      // 2. Delete all Scans for this shop
-      const deletedScans = await prisma.scan.deleteMany({
-        where: { shop: shopDomain },
-      });
-      console.log(`Deleted ${deletedScans.count} scans`);
+      const [issues, scans, merchant, sessions] = await Promise.all([
+        // 1. Compliance issues
+        prisma.issue.deleteMany({
+          where: { shop: shopDomain },
+        }),
 
-      // 3. Delete Merchant record
-      const deletedMerchant = await prisma.merchant.deleteMany({
-        where: { shop: shopDomain },
-      });
-      console.log(`Deleted ${deletedMerchant.count} merchant records`);
+        // 2. Scan history
+        prisma.scan.deleteMany({
+          where: { shop: shopDomain },
+        }),
 
-      // 4. Delete Shopify Sessions
-      const deletedSessions = await prisma.session.deleteMany({
-        where: { shop: shopDomain },
-      });
-      console.log(`Deleted ${deletedSessions.count} sessions`);
+        // 3. Merchant record
+        prisma.merchant.deleteMany({
+          where: { shop: shopDomain },
+        }),
 
-      console.log(`✅ All data deleted for shop: ${shopDomain}`);
+        // 4. Shopify sessions
+        prisma.session.deleteMany({
+          where: { shop: shopDomain },
+        }),
+      ]);
+
+      const duration = Date.now() - startTime;
+
+      console.log("✅ Shop data deleted:");
+      console.log(`   - Issues:    ${issues.count}`);
+      console.log(`   - Scans:     ${scans.count}`);
+      console.log(`   - Merchant:  ${merchant.count}`);
+      console.log(`   - Sessions:  ${sessions.count}`);
+      console.log(`   - Duration:  ${duration}ms`);
+      console.log(`✅ Complete data erasure for: ${shopDomain}`);
     } catch (dbError) {
       console.error("❌ Database deletion failed:", dbError);
+      console.error(`⚠️ MANUAL CLEANUP REQUIRED for shop: ${shopDomain}`);
     }
 
+    // Required: 200 OK within 5 seconds
     return new Response(null, { status: 200 });
   } catch (error) {
     console.error("❌ shop/redact webhook error:", error);
