@@ -210,8 +210,8 @@ export default function PrivacyPolicy() {
                     />
                     <Text as="p" variant="bodyMd">
                       To exercise these rights, email:{" "}
-                      <PolarisLink url="mailto:support@tryoxyy.com">
-                        support@tryoxyy.com
+                      <PolarisLink url="mailto:info@shopiters.com">
+                        info@shopiters.com
                       </PolarisLink>
                     </Text>
                     <Text as="p" variant="bodyMd">
@@ -228,7 +228,7 @@ export default function PrivacyPolicy() {
                     <BulletList
                       items={[
                         "Lawful basis for processing: Legitimate interest (compliance services)",
-                        "Data Protection Officer contact: support@tryoxyy.com",
+                        "Data Protection Officer contact: info@shopiters.com",
                         "EU representative: Available upon request",
                         "Right to lodge complaints with supervisory authorities",
                       ]}
@@ -251,8 +251,8 @@ export default function PrivacyPolicy() {
                     />
                     <Text as="p" variant="bodyMd">
                       Contact:{" "}
-                      <PolarisLink url="mailto:support@tryoxyy.com">
-                        support@tryoxyy.com
+                      <PolarisLink url="mailto:info@shopiters.com">
+                        info@shopiters.com
                       </PolarisLink>
                     </Text>
                   </Section>
@@ -325,8 +325,8 @@ export default function PrivacyPolicy() {
                       </Text>
                       <Text as="p" variant="bodyMd">
                         Email:{" "}
-                        <PolarisLink url="mailto:support@tryoxyy.com">
-                          support@tryoxyy.com
+                        <PolarisLink url="mailto:info@shopiters.com">
+                          info@shopiters.com
                         </PolarisLink>
                       </Text>
                       <Text as="p" variant="bodyMd">

@@ -154,7 +154,7 @@ export default function TermsOfService() {
                         items={[
                           "7-day money-back guarantee for first-time subscribers",
                           "Pro-rated refunds not provided for partial months",
-                          "Refund requests: support@tryoxyy.com",
+                          "Refund requests: info@shopiters.com",
                         ]}
                       />
                     </SubSection>
@@ -252,7 +252,7 @@ export default function TermsOfService() {
                       Your use of the App is also governed by our Privacy
                       Policy, available at{" "}
                       <PolarisLink url="/privacy">
-                        https://api.tryoxyy.com/privacy
+                        https://api.shopiters.com/privacy
                       </PolarisLink>
                     </Text>
                     <Text as="p" variant="bodyMd">
@@ -381,7 +381,7 @@ export default function TermsOfService() {
                   <Section title="16. Dispute Resolution">
                     <BulletList
                       items={[
-                        "Attempt informal resolution first (email support@tryoxyy.com)",
+                        "Attempt informal resolution first (email info@shopiters.com)",
                         "Mediation before litigation when possible",
                         "Class action waiver applies where legally permitted",
                       ]}
@@ -419,8 +419,8 @@ export default function TermsOfService() {
                       </Text>
                       <Text as="p" variant="bodyMd">
                         Email:{" "}
-                        <PolarisLink url="mailto:support@tryoxyy.com">
-                          support@tryoxyy.com
+                        <PolarisLink url="mailto:info@shopiters.com">
+                          info@shopiters.com
                         </PolarisLink>
                       </Text>
                       <Text as="p" variant="bodyMd">
