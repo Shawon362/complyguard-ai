@@ -1,6 +1,11 @@
 import { redirect, Form, useLoaderData } from "react-router";
 import { login } from "../../shopify.server";
 import styles from "./styles.module.css";
+import {
+  SearchIcon,
+  MagicIcon,
+  FileIcon,
+} from "@shopify/polaris-icons";
 
 export const loader = async ({ request }) => {
   const url = new URL(request.url);
@@ -36,7 +41,7 @@ export default function App() {
           <div className={styles.navLinks}>
             <a href="/privacy">Privacy</a>
             <a href="/terms">Terms</a>
-            <a href="mailto:support@shopiters.com">Support</a>
+            <a href="mailto:info@shopiters.com">Support</a>
           </div>
         </div>
       </nav>
@@ -122,7 +127,9 @@ export default function App() {
           </h2>
           <div className={styles.featureGrid}>
             <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>🔍</div>
+              <div className={styles.featureIcon}>
+                <SearchIcon />
+              </div>
               <h3>AI-Powered Scanning</h3>
               <p>
                 Automatically detect GDPR, CCPA, and EU AI Act issues across
@@ -130,7 +137,9 @@ export default function App() {
               </p>
             </div>
             <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>⚡</div>
+              <div className={styles.featureIcon}>
+                <MagicIcon />
+              </div>
               <h3>One-Click Auto-Fix</h3>
               <p>
                 Resolve common compliance violations instantly — no legal
@@ -138,7 +147,9 @@ export default function App() {
               </p>
             </div>
             <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>📄</div>
+              <div className={styles.featureIcon}>
+                <FileIcon />
+              </div>
               <h3>Compliance Reports</h3>
               <p>
                 Generate professional PDF reports to document your compliance
@@ -185,7 +196,7 @@ export default function App() {
           <div className={styles.footerLinks}>
             <a href="/privacy">Privacy Policy</a>
             <a href="/terms">Terms of Service</a>
-            <a href="mailto:support@shopiters.com">Support</a>
+            <a href="mailto:info@shopiters.com">Support</a>
           </div>
           <div className={styles.footerCopy}>
             © {new Date().getFullYear()} Microters LLC. All rights reserved.
