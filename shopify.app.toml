@@ -2,7 +2,7 @@
 
 client_id = "0b6ffdf911d62c24566813f8e2b636db"
 name = "complyguard-ai"
-application_url = "https://api.tryoxyy.com"
+application_url = "https://api.shopiters.com"
 embedded = true
 
 [build]
@@ -41,9 +41,9 @@ scopes = "write_products,read_legal_policies,write_legal_policies,read_script_ta
 
 [auth]
 redirect_urls = [
-  "https://api.tryoxyy.com/auth/callback",
-  "https://api.tryoxyy.com/auth/shopify/callback",
-  "https://api.tryoxyy.com/api/auth/callback"
+  "https://api.shopiters.com/auth/callback",
+  "https://api.shopiters.com/auth/shopify/callback",
+  "https://api.shopiters.com/api/auth/callback"
 ]
 
 [product.metafields.app.demo_info]
