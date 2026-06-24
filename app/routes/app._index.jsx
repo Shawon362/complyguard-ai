@@ -50,32 +50,67 @@ export const loader = async ({ request }) => {
   // BILLING AUTO-SYNC — Verify plan matches Shopify
   // (Backup for missed webhooks/callbacks)
   // ────────────────────────────────────────────────
-  try {
-    const subscriptions = await getActiveSubscriptions(admin);
-    const activeSubscription = subscriptions.find((sub) => sub.status === "ACTIVE");
+  // try {
+  //   const subscriptions = await getActiveSubscriptions(admin);
+  //   const activeSubscription = subscriptions.find((sub) => sub.status === "ACTIVE");
 
-    let actualPlan = "free";
-    if (activeSubscription) {
-      actualPlan = getPlanKeyFromSubscriptionName(activeSubscription.name);
+  //   let actualPlan = "free";
+  //   if (activeSubscription) {
+  //     actualPlan = getPlanKeyFromSubscriptionName(activeSubscription.name);
+  //   }
+
+  //   const currentDbPlan = merchant.plan || "free";
+
+  //   if (currentDbPlan !== actualPlan) {
+  //     console.log(`>>> Plan mismatch: DB=${currentDbPlan}, Shopify=${actualPlan}. Auto-syncing...`);
+
+  //     merchant = await prisma.merchant.update({
+  //       where: { shop },
+  //       data: {
+  //         plan: actualPlan,
+  //         planStartDate: actualPlan !== "free" ? new Date() : null,
+  //       },
+  //     });
+
+  //     console.log(`✅ Plan auto-synced: ${currentDbPlan} → ${actualPlan}`);
+  //   }
+  // } catch (syncError) {
+  //   console.error(">>> Auto-sync error (non-blocking):", syncError.message);
+  // }
+
+  // ────────────────────────────────────────────────
+  // BILLING AUTO-SYNC — Verify plan matches Shopify
+  // (Backup for missed webhooks/callbacks)
+  // ────────────────────────────────────────────────
+  // ⚠️ TEMPORARILY DISABLED FOR TESTING
+  // Re-enable before production submission!
+  const DISABLE_AUTOSYNC_FOR_TESTING = true;
+
+  if (!DISABLE_AUTOSYNC_FOR_TESTING) {
+    try {
+      const subscriptions = await getActiveSubscriptions(admin);
+      const activeSubscription = subscriptions.find((sub) => sub.status === "ACTIVE");
+      let actualPlan = "free";
+      if (activeSubscription) {
+        actualPlan = getPlanKeyFromSubscriptionName(activeSubscription.name);
+      }
+      const currentDbPlan = merchant.plan || "free";
+      if (currentDbPlan !== actualPlan) {
+        console.log(`>>> Plan mismatch: DB=${currentDbPlan}, Shopify=${actualPlan}. Auto-syncing...`);
+        merchant = await prisma.merchant.update({
+          where: { shop },
+          data: {
+            plan: actualPlan,
+            planStartDate: actualPlan !== "free" ? new Date() : null,
+          },
+        });
+        console.log(`✅ Plan auto-synced: ${currentDbPlan} → ${actualPlan}`);
+      }
+    } catch (syncError) {
+      console.error(">>> Auto-sync error (non-blocking):", syncError.message);
     }
-
-    const currentDbPlan = merchant.plan || "free";
-
-    if (currentDbPlan !== actualPlan) {
-      console.log(`>>> Plan mismatch: DB=${currentDbPlan}, Shopify=${actualPlan}. Auto-syncing...`);
-
-      merchant = await prisma.merchant.update({
-        where: { shop },
-        data: {
-          plan: actualPlan,
-          planStartDate: actualPlan !== "free" ? new Date() : null,
-        },
-      });
-
-      console.log(`✅ Plan auto-synced: ${currentDbPlan} → ${actualPlan}`);
-    }
-  } catch (syncError) {
-    console.error(">>> Auto-sync error (non-blocking):", syncError.message);
+  } else {
+    console.log(">>> ⚠️ Auto-sync DISABLED for testing. Using DB plan:", merchant.plan);
   }
 
 
