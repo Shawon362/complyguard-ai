@@ -11,6 +11,7 @@
     "reset-admin-password": "node scripts/reset-admin-password.js",
     "migrate-api-key": "node scripts/migrate-api-key.js",
     "reset-stuck-scans": "node scripts/reset-stuck-scans.js",
+    "set-plan": "node scripts/set-merchant-plan.js",
     "config:link": "shopify app config link",
     "generate": "shopify app generate",
     "deploy": "shopify app deploy",
