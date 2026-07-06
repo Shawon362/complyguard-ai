@@ -82,6 +82,42 @@ export const action = async ({ request }) => {
     };
   }
 
+  // === TEST ALL KEYS ===
+  if (intent === "test-all") {
+    const allKeys = await prisma.apiKey.findMany({
+      where: { isActive: true },
+      orderBy: { priority: "asc" },
+    });
+
+    const results = [];
+    for (const key of allKeys) {
+      const baseUrl = key.baseUrl || PROVIDERS[key.provider]?.defaultBaseUrl;
+      const testResult = await testApiKey({
+        apiKey: key.apiKey,
+        baseUrl,
+        modelName: key.modelName,
+      });
+      results.push({
+        id: key.id,
+        name: key.name,
+        modelName: key.modelName,
+        success: testResult.success,
+        response: testResult.response || null,
+        responseTime: testResult.responseTime || null,
+        error: testResult.error || null,
+      });
+    }
+
+    const passed = results.filter((r) => r.success).length;
+
+    return {
+      intent: "test-all",
+      success: true,
+      results,
+      message: `Tested ${results.length} keys: ${passed} passed, ${results.length - passed} failed`,
+    };
+  }
+
   // === CREATE ===
   if (intent === "create") {
     const name = formData.get("name");
@@ -276,6 +312,14 @@ export default function ApiKeysPage() {
       ? actionData
       : null;
 
+  // Test All results (map: keyId → result)
+  const testAllResults = {};
+  if (actionData?.intent === "test-all" && actionData.results) {
+    for (const r of actionData.results) {
+      testAllResults[r.id] = r;
+    }
+  }
+
   // Close modal on successful save
   const shouldCloseModal =
     actionData?.success &&
@@ -344,7 +388,16 @@ export default function ApiKeysPage() {
     <Text as="span" variant="bodyMd" key={key.id + "-k"} fontWeight="medium">
       <code style={{ fontSize: "12px" }}>{key.apiKey}</code>
     </Text>,
-    <StatusBadge status={key.status} key={key.id + "-s"} />,
+    <BlockStack gap="100" key={key.id + "-s"}>
+      <StatusBadge status={key.status} />
+      {testAllResults[key.id] && (
+        <Badge tone={testAllResults[key.id].success ? "success" : "critical"}>
+          {testAllResults[key.id].success
+            ? `✓ ${testAllResults[key.id].response || "OK"}`
+            : "✗ Failed"}
+        </Badge>
+      )}
+    </BlockStack>,
     <BlockStack gap="050" key={key.id + "-u"}>
       <Text as="span" variant="bodyMd">
         {key.totalCalls.toLocaleString()} calls
@@ -434,9 +487,21 @@ export default function ApiKeysPage() {
                     {keys.filter((k) => k.isActive).length} active of {keys.length} total
                   </Text>
                 </BlockStack>
-                <Button onClick={() => setShowAddModal(true)} variant="primary">
-                  Add API Key
-                </Button>
+                <InlineStack gap="200">
+                  <Form method="POST">
+                    <input type="hidden" name="intent" value="test-all" />
+                    <Button
+                      submit
+                      loading={isSubmitting && navigation.formData?.get("intent") === "test-all"}
+                      disabled={keys.filter((k) => k.isActive).length === 0}
+                    >
+                      Test All Models
+                    </Button>
+                  </Form>
+                  <Button onClick={() => setShowAddModal(true)} variant="primary">
+                    Add API Key
+                  </Button>
+                </InlineStack>
               </InlineStack>
             </Box>
             <Divider />

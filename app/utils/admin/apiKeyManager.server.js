@@ -279,10 +279,22 @@ export async function testApiKey({ apiKey, baseUrl, modelName }) {
 
     const startTime = Date.now();
 
+    // A tiny 1x1 red pixel PNG (base64) to test vision capability
+    const testImage =
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
     const response = await client.chat.completions.create({
       model: modelName,
-      messages: [{ role: "user", content: "Say 'OK' in one word." }],
-      max_tokens: 10,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "What color is this image? Reply in one word." },
+            { type: "image_url", image_url: { url: testImage } },
+          ],
+        },
+      ],
+      max_tokens: 20,
     });
 
     const responseTime = Date.now() - startTime;
