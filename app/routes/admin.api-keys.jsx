@@ -97,6 +97,8 @@ export const action = async ({ request }) => {
           baseUrl,
           modelName: key.modelName,
         });
+        console.log(`>>> TEST-ALL: ${key.name} (${key.modelName}) →`,
+          testResult.success ? "✓ PASS" : `✗ FAIL: ${testResult.error}`);
         return {
           id: key.id,
           name: key.name,

@@ -223,6 +223,8 @@ export async function callWithFailover(callFn) {
         callFn
       );
 
+      // Success — log which model worked
+      console.log(`>>> SUCCESS: ${keyRecord.name} (${keyRecord.modelName}) responded`);
       // Success — reset failure counter
       trackSuccess(keyRecord.id);
       prisma.apiKey
