@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useLoaderData,
   useActionData,
   useNavigation,
+  useFetcher,
   Form,
   redirect,
 } from "react-router";
@@ -292,6 +293,7 @@ export default function ApiKeysPage() {
   const { keys } = useLoaderData();
   const actionData = useActionData();
   const navigation = useNavigation();
+  const testFetcher = useFetcher();
   const isSubmitting = navigation.state === "submitting";
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -309,10 +311,10 @@ export default function ApiKeysPage() {
     notes: "",
   });
 
-  // Test result state
+  // Test result state (from fetcher)
   const testResult =
-    actionData?.intent === "test"
-      ? actionData
+    testFetcher.data?.intent === "test"
+      ? testFetcher.data
       : null;
 
   // Test All results (map: keyId → result)
@@ -323,13 +325,13 @@ export default function ApiKeysPage() {
     }
   }
 
-  // Close modal on successful save
+  // Close modal on successful save (using useEffect - safe)
   const shouldCloseModal =
     actionData?.success &&
     (actionData.intent === "create" || actionData.intent === "update");
 
-  if (shouldCloseModal && (showAddModal || editingKey)) {
-    setTimeout(() => {
+  useEffect(() => {
+    if (shouldCloseModal) {
       setShowAddModal(false);
       setEditingKey(null);
       setFormData({
@@ -341,8 +343,8 @@ export default function ApiKeysPage() {
         priority: "100",
         notes: "",
       });
-    }, 100);
-  }
+    }
+  }, [shouldCloseModal]);
 
   // Provider options for Select
   const providerOptions = Object.entries(PROVIDERS).map(([key, p]) => ({
@@ -702,7 +704,7 @@ export default function ApiKeysPage() {
 
               <Divider />
 
-              {/* Test button - separate form to avoid main submit */}
+              {/* Test button - uses fetcher to show result without reload */}
               <Box>
                 <Text as="p" variant="bodySm" tone="subdued">
                   Test this key before saving to verify it works.
@@ -710,22 +712,18 @@ export default function ApiKeysPage() {
                 <Box paddingBlockStart="200">
                   <Button
                     onClick={() => {
-                      const testForm = new FormData();
-                      testForm.set("intent", "test");
-                      testForm.set("apiKey", formData.apiKey);
-                      testForm.set("provider", formData.provider);
-                      testForm.set("baseUrl", formData.baseUrl);
-                      testForm.set("modelName", formData.modelName);
-
-                      // Submit via fetch
-                      fetch("/admin/api-keys", {
-                        method: "POST",
-                        body: testForm,
-                      })
-                        .then((r) => r.text())
-                        .then(() => window.location.reload());
+                      testFetcher.submit(
+                        {
+                          intent: "test",
+                          apiKey: formData.apiKey,
+                          provider: formData.provider,
+                          baseUrl: formData.baseUrl,
+                          modelName: formData.modelName,
+                        },
+                        { method: "POST" }
+                      );
                     }}
-                    loading={isSubmitting && actionData?.intent === "test"}
+                    loading={testFetcher.state === "submitting"}
                     disabled={
                       !formData.apiKey || !formData.baseUrl || !formData.modelName
                     }
