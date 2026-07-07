@@ -128,7 +128,7 @@ export async function getApiClient() {
       client: new OpenAI({
         apiKey: envKey,
         baseURL: "https://api.oxyy.ai/v1",
-        timeout: 20000,
+        timeout: 300000,
         maxRetries: 0,
       }),
       keyRecord: null,
@@ -142,7 +142,7 @@ export async function getApiClient() {
     client: new OpenAI({
       apiKey: primaryKey.apiKey,
       baseURL: primaryKey.baseUrl || PROVIDERS[primaryKey.provider]?.defaultBaseUrl,
-      timeout: 20000,
+      timeout: 300000,
       maxRetries: 0,
     }),
     keyRecord: primaryKey,
@@ -179,7 +179,7 @@ export async function callWithFailover(callFn) {
     const client = new OpenAI({
       apiKey: envKey,
       baseURL: "https://api.oxyy.ai/v1",
-      timeout: 20000,
+      timeout: 300000,
       maxRetries: 0,
     });
     return await callWithSmartRetry(client, "gemini-2.5-flash", callFn);
@@ -210,7 +210,7 @@ export async function callWithFailover(callFn) {
         client = new OpenAI({
           apiKey: keyRecord.apiKey,
           baseURL: baseUrl,
-          timeout: 20000,
+          timeout: 300000,
           maxRetries: 0,
         });
         _clientCache.set(keyRecord.id, client);
