@@ -1,4 +1,5 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
 client_id = "0b6ffdf911d62c24566813f8e2b636db"
 name = "complyguard-ai"
 application_url = "https://api.shopiters.com"
@@ -11,32 +12,32 @@ automatically_update_urls_on_dev = true
 api_version = "2026-07"
 
   [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+  [[webhooks.subscriptions]]
   topics = [ "app/uninstalled" ]
   uri = "/webhooks/app/uninstalled"
 
   [[webhooks.subscriptions]]
-  topics = [ "app/scopes_update" ]
-  uri = "/webhooks/app/scopes_update"
+  uri = "/webhooks/customers/data_request"
+  compliance_topics = [ "customers/data_request" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/redact"
+  compliance_topics = [ "customers/redact" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/shop/redact"
+  compliance_topics = [ "shop/redact" ]
 
   [[webhooks.subscriptions]]
   topics = [ "app_subscriptions/update" ]
   uri = "/webhooks/app_subscriptions_update"
 
-  [[webhooks.subscriptions]]
-  compliance_topics = [ "customers/data_request" ]
-  uri = "/webhooks/customers/data_request"
-
-  [[webhooks.subscriptions]]
-  compliance_topics = [ "customers/redact" ]
-  uri = "/webhooks/customers/redact"
-
-  [[webhooks.subscriptions]]
-  compliance_topics = [ "shop/redact" ]
-  uri = "/webhooks/shop/redact"
-
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products,read_legal_policies,write_legal_policies,read_script_tags,read_themes"
+scopes = "read_legal_policies,read_script_tags,read_themes,write_legal_policies,write_products"
 
 [auth]
 redirect_urls = [

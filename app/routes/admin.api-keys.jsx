@@ -89,24 +89,25 @@ export const action = async ({ request }) => {
       orderBy: { priority: "asc" },
     });
 
-    const results = [];
-    for (const key of allKeys) {
-      const baseUrl = key.baseUrl || PROVIDERS[key.provider]?.defaultBaseUrl;
-      const testResult = await testApiKey({
-        apiKey: key.apiKey,
-        baseUrl,
-        modelName: key.modelName,
-      });
-      results.push({
-        id: key.id,
-        name: key.name,
-        modelName: key.modelName,
-        success: testResult.success,
-        response: testResult.response || null,
-        responseTime: testResult.responseTime || null,
-        error: testResult.error || null,
-      });
-    }
+    const results = await Promise.all(
+      allKeys.map(async (key) => {
+        const baseUrl = key.baseUrl || PROVIDERS[key.provider]?.defaultBaseUrl;
+        const testResult = await testApiKey({
+          apiKey: key.apiKey,
+          baseUrl,
+          modelName: key.modelName,
+        });
+        return {
+          id: key.id,
+          name: key.name,
+          modelName: key.modelName,
+          success: testResult.success,
+          response: testResult.response || null,
+          responseTime: testResult.responseTime || null,
+          error: testResult.error || null,
+        };
+      })
+    );
 
     const passed = results.filter((r) => r.success).length;
 

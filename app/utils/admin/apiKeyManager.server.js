@@ -273,7 +273,7 @@ export async function testApiKey({ apiKey, baseUrl, modelName }) {
     const client = new OpenAI({
       apiKey,
       baseURL: baseUrl,
-      timeout: 20000,
+      timeout: 60000,
       maxRetries: 0,
     });
 
