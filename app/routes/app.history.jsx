@@ -250,7 +250,7 @@ export default function ScanHistory() {
                   return (
                     <Link
                       key={scan.id}
-                      to={`/app/history/${scan.id}`}
+                      to="/app/history"
                       style={{ textDecoration: "none", color: "inherit" }}
                     >
                       <div
