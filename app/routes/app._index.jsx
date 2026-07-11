@@ -84,7 +84,7 @@ export const loader = async ({ request }) => {
   // ────────────────────────────────────────────────
   // ⚠️ TEMPORARILY DISABLED FOR TESTING
   // Re-enable before production submission!
-  const DISABLE_AUTOSYNC_FOR_TESTING = true;
+  const DISABLE_AUTOSYNC_FOR_TESTING = false;
 
   if (!DISABLE_AUTOSYNC_FOR_TESTING) {
     try {
