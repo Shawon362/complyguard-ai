@@ -1,6 +1,5 @@
 import { Page, BlockStack } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
-import { createSubscription } from "../utils/billing.server";
 
 import PricingHero from "../components/pricing/PricingHero";
 import PricingGrid from "../components/pricing/PricingGrid";
@@ -38,15 +37,12 @@ export const action = async ({ request }) => {
   }
 
   try {
-    const url = new URL(request.url);
-    const returnUrl = `${url.origin}/app/billing/callback?plan=${planKey}&shop=${shop}`;
-
-    const result = await createSubscription(admin, planKey, returnUrl);
-
-    console.log(`>>> Subscription created for ${shop}: plan=${planKey}, test=${result.test}`);
+    const shopName = shop.replace(".myshopify.com", "");
+    const pricingUrl = `https://admin.shopify.com/store/${shopName}/charges/complyguard-ai-1/pricing_plans`;
+    console.log(`>>> Redirecting ${shop} to Managed Pricing page: ${pricingUrl}`);
     return {
       success: true,
-      confirmationUrl: result.confirmationUrl,
+      confirmationUrl: pricingUrl,
       planKey,
     };
   } catch (error) {
