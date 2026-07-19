@@ -1,4 +1,5 @@
 import { Page, BlockStack } from "@shopify/polaris";
+import { useLoaderData } from "react-router";
 import { authenticate } from "../shopify.server";
 
 import PricingHero from "../components/pricing/PricingHero";
@@ -58,11 +59,12 @@ export const action = async ({ request }) => {
 // UI
 // ============================================================
 export default function Pricing() {
+  const { currentPlan } = useLoaderData();
   return (
     <Page fullWidth>
       <BlockStack gap="500">
         <PricingHero />
-        <PricingGrid />
+        <PricingGrid currentPlan={currentPlan} />
         <PricingComparison />
         <PricingFAQ />
       </BlockStack>
