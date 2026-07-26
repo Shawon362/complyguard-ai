@@ -1,0 +1,10 @@
+api_version = "2025-01"
+
+[[extensions]]
+name = "Compliance Badge"
+handle = "compliance-badge"
+type = "theme"
+
+[[extensions.metafields]]
+namespace = "compliance"
+key = "ai_generated"

@@ -1,0 +1,50 @@
+{% comment %}
+  AI-Generated Content Badge
+  Shows when product has compliance.ai_generated = true
+  Required for EU AI Act (Article 50) disclosure
+{% endcomment %}
+
+{% if product.metafields.compliance.ai_generated %}
+  <div class="complyguard-ai-badge" style="
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    margin: 10px 0;
+    background: {{ block.settings.bg_color }};
+    color: {{ block.settings.text_color }};
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+  ">
+    <span>🤖</span>
+    <span>{{ block.settings.badge_text }}</span>
+  </div>
+{% endif %}
+
+{% schema %}
+{
+  "name": "AI Content Badge",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "badge_text",
+      "label": "Badge text",
+      "default": "AI-generated image"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#F0F4FF"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#3B4A9C"
+    }
+  ]
+}
+{% endschema %}
