@@ -2,13 +2,16 @@
 // AI disclosure text to inject
 // ============================================================
 const AI_DISCLOSURE_TEXT = `
-
-<h3>AI Technology Disclosure (EU AI Act Compliance)</h3>
-<p>In accordance with the EU AI Act (Regulation 2024/1689, Article 50), we disclose the following:</p>
+<h3>How We Use Artificial Intelligence (EU AI Act & GDPR Compliance)</h3>
+<p>In accordance with the EU AI Act (Regulation 2024/1689, Article 50) and GDPR, we disclose how we use AI:</p>
 <ul>
-  <li>This store may use AI-generated product images, which are clearly labeled when present.</li>
-  <li>We may use automated recommendation systems and AI-powered chatbots for customer service.</li>
-  <li>You can request information about any AI systems used in our customer interactions by contacting us.</li>
+  <li><strong>AI-generated content:</strong> Some product images may be AI-generated. These are clearly labeled where present.</li>
+  <li><strong>Automated systems:</strong> We may use AI for product recommendations, personalized search, and customer service chatbots.</li>
+  <li><strong>Data we process:</strong> AI features may use your browsing behavior, purchase history, cart activity, and general location to personalize your experience.</li>
+  <li><strong>The logic:</strong> Our recommendation systems analyze products you view and purchase to suggest similar or complementary items.</li>
+  <li><strong>Your rights (GDPR Article 22):</strong> You have the right to opt out of AI-driven personalization and automated profiling, to request human review, and to contest automated decisions that significantly affect you.</li>
+  <li><strong>How to opt out:</strong> To opt out of AI personalization or request information about our AI systems, please contact us using the details in this policy.</li>
+  <li><strong>Data retention:</strong> AI-related data is retained only as long as necessary for the purposes described and in line with our general data retention practices.</li>
 </ul>
 <p>For more information about the EU AI Act, visit <a href="https://eur-lex.europa.eu/eli/reg/2024/1689/oj" target="_blank">EUR-Lex</a>.</p>
 `;
