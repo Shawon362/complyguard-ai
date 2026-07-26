@@ -136,6 +136,29 @@ export async function fixAIImage(admin, evidence) {
   }
 
   // ============================================================
+  // ACTION 4a: Ensure metafield definition exists (storefront visible)
+  // ============================================================
+  try {
+    await admin.graphql(`
+      mutation {
+        metafieldDefinitionCreate(definition: {
+          name: "AI Generated"
+          namespace: "compliance"
+          key: "ai_generated"
+          type: "boolean"
+          ownerType: PRODUCT
+          access: { storefront: PUBLIC_READ }
+        }) {
+          createdDefinition { id }
+          userErrors { field message }
+        }
+      }
+    `);
+  } catch (defError) {
+    console.log(">>> Definition ensure (non-blocking):", defError.message);
+  }
+
+  // ============================================================
   // ACTION 4: Add schema.org creditText metafield
   // ============================================================
   try {
