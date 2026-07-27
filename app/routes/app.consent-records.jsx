@@ -78,6 +78,7 @@ export default function ConsentRecords() {
               selectable={false}
               headings={[
                 { title: "Date" },
+                { title: "Country" },
                 { title: "Choice" },
                 { title: "Analytics" },
                 { title: "Marketing" },
@@ -86,6 +87,7 @@ export default function ConsentRecords() {
               {records.map((r, index) => (
                 <IndexTable.Row id={r.id} key={r.id} position={index}>
                   <IndexTable.Cell>{formatDate(r.createdAt)}</IndexTable.Cell>
+                  <IndexTable.Cell>{r.country || "—"}</IndexTable.Cell>
                   <IndexTable.Cell>{typeBadge(r.consentType)}</IndexTable.Cell>
                   <IndexTable.Cell>
                     {r.analytics ? <Badge tone="success">On</Badge> : <Badge>Off</Badge>}
