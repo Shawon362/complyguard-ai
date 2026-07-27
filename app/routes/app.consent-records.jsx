@@ -50,7 +50,7 @@ export default function ConsentRecords() {
   }
 
   return (
-    <Page title="Consent Records" subtitle="Proof-of-consent log for GDPR / CCPA compliance">
+    <Page title="Consent Records" subtitle="Proof-of-consent log for GDPR / CCPA compliance" fullWidth>
       <BlockStack gap="500">
         <Card>
           <Box padding="400">
