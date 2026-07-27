@@ -33,14 +33,18 @@
         badge.className = 'complyguard-auto-badge';
         badge.innerHTML = '<span>\uD83E\uDD16</span><span>' + data.getAttribute('data-text') + '</span>';
 
-        var img = document.querySelector('.product__media img, .product-single__photo img, .product__media, .product-single__photo, main img');
-        if (img) {
-          var mediaBox = img.closest('.product__media, .product-single__photo, .media') || img.parentElement;
-          if (mediaBox) {
-            mediaBox.classList.add('complyguard-media-wrap');
-            mediaBox.appendChild(badge);
-            return;
+        var candidates = document.querySelectorAll('.product__media, .product-single__photo, .product__media-item, .product-gallery__media, [class*="product"][class*="media"]');
+        var mediaBox = null;
+        for (var i = 0; i < candidates.length; i++) {
+          if (!candidates[i].closest('sticky-add-to-cart, .sticky-add-to-cart')) {
+            mediaBox = candidates[i];
+            break;
           }
+        }
+        if (mediaBox) {
+          mediaBox.classList.add('complyguard-media-wrap');
+          mediaBox.appendChild(badge);
+          return;
         }
       }
 
