@@ -1,0 +1,111 @@
+{% comment %}
+  Cookie Consent Banner (App Embed)
+  GDPR / CCPA compliance - shown to all visitors
+  Merchant enables once via App embeds toggle
+{% endcomment %}
+
+<div id="complyguard-cookie-data"
+     data-text="{{ block.settings.banner_text }}"
+     data-bg="{{ block.settings.bg_color }}"
+     data-color="{{ block.settings.text_color }}"
+     data-accept="{{ block.settings.accept_color }}"
+     data-policy="{{ block.settings.policy_url }}"
+     style="display:none;"></div>
+
+<script>
+  (function() {
+    var data = document.getElementById('complyguard-cookie-data');
+    if (!data) return;
+    if (localStorage.getItem('complyguard_consent')) return;
+
+    function showBanner() {
+      if (document.getElementById('complyguard-cookie-banner')) return;
+
+      var style = document.createElement('style');
+      style.textContent =
+        '#complyguard-cookie-banner{position:fixed;bottom:0;left:0;right:0;z-index:99999;'
+        + 'background:' + data.getAttribute('data-bg') + ';'
+        + 'color:' + data.getAttribute('data-color') + ';'
+        + 'padding:16px 20px;box-shadow:0 -2px 12px rgba(0,0,0,0.15);'
+        + 'font-size:14px;line-height:1.5;}'
+        + '#complyguard-cookie-banner .cg-inner{max-width:1100px;margin:0 auto;'
+        + 'display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;}'
+        + '#complyguard-cookie-banner .cg-text{flex:1;min-width:240px;}'
+        + '#complyguard-cookie-banner a{color:' + data.getAttribute('data-color') + ';text-decoration:underline;}'
+        + '#complyguard-cookie-banner .cg-btns{display:flex;gap:8px;flex-shrink:0;}'
+        + '#complyguard-cookie-banner button{padding:9px 18px;border-radius:6px;cursor:pointer;'
+        + 'font-size:14px;font-weight:600;border:none;}'
+        + '#complyguard-cookie-banner .cg-reject{background:transparent;'
+        + 'border:1px solid ' + data.getAttribute('data-color') + ';'
+        + 'color:' + data.getAttribute('data-color') + ';}'
+        + '#complyguard-cookie-banner .cg-accept{background:' + data.getAttribute('data-accept') + ';color:#ffffff;}';
+      document.head.appendChild(style);
+
+      var policyUrl = data.getAttribute('data-policy') || '/policies/privacy-policy';
+      var banner = document.createElement('div');
+      banner.id = 'complyguard-cookie-banner';
+      banner.innerHTML =
+        '<div class="cg-inner">'
+        + '<span class="cg-text">' + data.getAttribute('data-text')
+        + ' <a href="' + policyUrl + '">Learn more</a></span>'
+        + '<div class="cg-btns">'
+        + '<button class="cg-reject">Reject</button>'
+        + '<button class="cg-accept">Accept</button>'
+        + '</div></div>';
+      document.body.appendChild(banner);
+
+      banner.querySelector('.cg-accept').addEventListener('click', function() {
+        localStorage.setItem('complyguard_consent', 'accepted');
+        banner.remove();
+      });
+      banner.querySelector('.cg-reject').addEventListener('click', function() {
+        localStorage.setItem('complyguard_consent', 'rejected');
+        banner.remove();
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', showBanner);
+    } else {
+      showBanner();
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Cookie Consent Banner",
+  "target": "body",
+  "settings": [
+    {
+      "type": "textarea",
+      "id": "banner_text",
+      "label": "Banner text",
+      "default": "We use cookies to improve your experience and for analytics. By using our site, you agree to our use of cookies."
+    },
+    {
+      "type": "url",
+      "id": "policy_url",
+      "label": "Privacy policy link"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#1F2937"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "accept_color",
+      "label": "Accept button color",
+      "default": "#3B82F6"
+    }
+  ]
+}
+{% endschema %}
