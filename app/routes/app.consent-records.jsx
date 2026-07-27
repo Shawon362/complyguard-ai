@@ -28,15 +28,21 @@ export const loader = async ({ request }) => {
   });
 
   const total = await prisma.consentLog.count({ where: { shop } });
+  const acceptedCount = await prisma.consentLog.count({ where: { shop, consentType: "accept_all" } });
+  const rejectedCount = await prisma.consentLog.count({ where: { shop, consentType: "reject_all" } });
+  const ccpaCount = await prisma.consentLog.count({ where: { shop, consentType: "ccpa_opt_out" } });
+  const customCount = await prisma.consentLog.count({ where: { shop, consentType: "custom" } });
 
-  return { records, total };
+  const acceptRate = total > 0 ? Math.round((acceptedCount / total) * 100) : 0;
+
+  return { records, total, acceptedCount, rejectedCount, ccpaCount, customCount, acceptRate };
 };
 
 // ============================================================
 // COMPONENT
 // ============================================================
 export default function ConsentRecords() {
-  const { records, total } = useLoaderData();
+  const { records, total, acceptedCount, rejectedCount, ccpaCount, customCount, acceptRate } = useLoaderData();
 
   function formatDate(dateString) {
     const d = new Date(dateString);
@@ -53,15 +59,56 @@ export default function ConsentRecords() {
   return (
     <Page title="Consent Records" subtitle="Proof-of-consent log for GDPR / CCPA compliance" fullWidth>
       <BlockStack gap="500">
-        <Card>
-          <Box padding="400">
-            <InlineStack gap="200" align="start">
-              <Text as="p" variant="bodyMd">
-                Total consent records stored: <Text as="span" fontWeight="bold">{total}</Text>
-              </Text>
-            </InlineStack>
+        <InlineStack gap="400" wrap>
+          <Box minWidth="150px">
+            <Card>
+              <BlockStack gap="100">
+                <Text as="p" variant="bodySm" tone="subdued">Total consents</Text>
+                <Text as="p" variant="headingLg">{total}</Text>
+              </BlockStack>
+            </Card>
           </Box>
-        </Card>
+          <Box minWidth="150px">
+            <Card>
+              <BlockStack gap="100">
+                <Text as="p" variant="bodySm" tone="subdued">Accept rate</Text>
+                <Text as="p" variant="headingLg">{acceptRate}%</Text>
+              </BlockStack>
+            </Card>
+          </Box>
+          <Box minWidth="150px">
+            <Card>
+              <BlockStack gap="100">
+                <Text as="p" variant="bodySm" tone="subdued">Accepted all</Text>
+                <Text as="p" variant="headingLg">{acceptedCount}</Text>
+              </BlockStack>
+            </Card>
+          </Box>
+          <Box minWidth="150px">
+            <Card>
+              <BlockStack gap="100">
+                <Text as="p" variant="bodySm" tone="subdued">Rejected all</Text>
+                <Text as="p" variant="headingLg">{rejectedCount}</Text>
+              </BlockStack>
+            </Card>
+          </Box>
+          <Box minWidth="150px">
+            <Card>
+              <BlockStack gap="100">
+                <Text as="p" variant="bodySm" tone="subdued">CCPA opt-out</Text>
+                <Text as="p" variant="headingLg">{ccpaCount}</Text>
+              </BlockStack>
+            </Card>
+          </Box>
+          <Box minWidth="150px">
+            <Card>
+              <BlockStack gap="100">
+                <Text as="p" variant="bodySm" tone="subdued">Custom</Text>
+                <Text as="p" variant="headingLg">{customCount}</Text>
+              </BlockStack>
+            </Card>
+          </Box>
+        </InlineStack>
 
         <Card padding="0">
           {records.length === 0 ? (
