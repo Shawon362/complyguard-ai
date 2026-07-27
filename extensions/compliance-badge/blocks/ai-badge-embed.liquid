@@ -1,0 +1,80 @@
+{% comment %}
+  AI Badge Auto-Embed (App Embed)
+  Merchant enables once → badge auto-injects on all AI product pages
+  Reads compliance.ai_generated metafield
+{% endcomment %}
+
+{% if template contains 'product' %}
+  {% if product.metafields.compliance.ai_generated %}
+    <style>
+      .complyguard-auto-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        margin: 10px 0;
+        background: {{ block.settings.bg_color }};
+        color: {{ block.settings.text_color }};
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+      }
+    </style>
+
+    <script>
+      (function() {
+        function injectBadge() {
+          if (document.querySelector('.complyguard-auto-badge')) return;
+
+          var badge = document.createElement('div');
+          badge.className = 'complyguard-auto-badge';
+          badge.innerHTML = '<span>🤖</span><span>{{ block.settings.badge_text }}</span>';
+
+          var img = document.querySelector('.product__media, .product-single__photo, [class*="product"][class*="media"], .product img');
+          if (img) {
+            var container = img.closest('.product__media-wrapper, .product__media-list, .product-single__photos') || img.parentElement;
+            if (container) {
+              container.parentElement.insertBefore(badge, container.nextSibling);
+              return;
+            }
+          }
+          var form = document.querySelector('.product-form, form[action*="/cart/add"]');
+          if (form) form.parentElement.insertBefore(badge, form);
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', injectBadge);
+        } else {
+          injectBadge();
+        }
+      })();
+    </script>
+  {% endif %}
+{% endif %}
+
+{% schema %}
+{
+  "name": "AI Badge (Auto)",
+  "target": "body",
+  "settings": [
+    {
+      "type": "text",
+      "id": "badge_text",
+      "label": "Badge text",
+      "default": "AI-generated image"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#F0F4FF"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#3B4A9C"
+    }
+  ]
+}
+{% endschema %}

@@ -1,4 +1,5 @@
 api_version = "2025-01"
+uid = "03f48acd-db08-77c5-d044-15b0dd164ea55fa43b2e"
 
 [[extensions]]
 name = "Compliance Badge"
