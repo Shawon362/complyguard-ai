@@ -3,11 +3,12 @@
   GDPR / CCPA - granular consent (Necessary / Analytics / Marketing)
 {% endcomment %}
 
+{% assign cg_settings = shop.metafields.complyguard.banner_settings.value %}
 <div id="complyguard-cookie-data"
-     data-text="{{ block.settings.banner_text }}"
-     data-bg="{{ block.settings.bg_color }}"
-     data-color="{{ block.settings.text_color }}"
-     data-accept="{{ block.settings.accept_color }}"
+     data-text="{% if cg_settings.banner_text %}{{ cg_settings.banner_text }}{% else %}{{ block.settings.banner_text }}{% endif %}"
+     data-bg="{% if cg_settings.bg_color %}{{ cg_settings.bg_color }}{% else %}{{ block.settings.bg_color }}{% endif %}"
+     data-color="{% if cg_settings.text_color %}{{ cg_settings.text_color }}{% else %}{{ block.settings.text_color }}{% endif %}"
+     data-accept="{% if cg_settings.accept_color %}{{ cg_settings.accept_color }}{% else %}{{ block.settings.accept_color }}{% endif %}"
      data-policy="{{ block.settings.policy_url }}"
      style="display:none;"></div>
 

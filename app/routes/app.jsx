@@ -22,6 +22,7 @@ export default function App() {
             <s-link href="/app">Dashboard</s-link>
             <s-link href="/app/history">Scan History</s-link>
             <s-link href="/app/consent-records">Consent Records</s-link>
+            <s-link href="/app/banner-settings">Banner Settings</s-link>
             <s-link href="/app/pricing">Pricing</s-link>
           </s-app-nav>
           <Outlet />
