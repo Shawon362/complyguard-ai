@@ -96,12 +96,24 @@ model Merchant {
   onboardingStep  Int      @default(0)
   storeName       String?
   storeUrl        String?
-
   plan            String   @default("free")
   planStartDate   DateTime? @default(now())
-
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model ConsentLog {
+  id           String   @id @default(cuid())
+  shop         String
+  necessary    Boolean  @default(true)
+  analytics    Boolean  @default(false)
+  marketing    Boolean  @default(false)
+  consentType  String   @default("custom")
+  country      String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@index([shop])
 }
 
 model AnalyzedImage {

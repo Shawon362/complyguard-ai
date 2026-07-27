@@ -22,9 +22,24 @@
     var accept = data.getAttribute('data-accept');
     var policyUrl = data.getAttribute('data-policy') || '/policies/privacy-policy';
 
-    function saveConsent(analytics, marketing) {
+    function saveConsent(analytics, marketing, consentType) {
       var consent = { necessary: true, analytics: analytics, marketing: marketing, date: new Date().toISOString() };
       localStorage.setItem('complyguard_consent', JSON.stringify(consent));
+
+      // Send consent to server (GDPR proof-of-consent log)
+      try {
+        fetch('https://api.shopiters.com/api/consent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            shop: window.Shopify && window.Shopify.shop ? window.Shopify.shop : 'unknown',
+            analytics: analytics,
+            marketing: marketing,
+            consentType: consentType || 'custom'
+          })
+        }).catch(function() {});
+      } catch (e) {}
+
       var banner = document.getElementById('complyguard-cookie-banner');
       if (banner) banner.remove();
       var modal = document.getElementById('complyguard-pref-modal');
@@ -78,8 +93,8 @@
         + '</div></div>';
       document.body.appendChild(banner);
 
-      banner.querySelector('.cg-accept').addEventListener('click', function() { saveConsent(true, true); });
-      banner.querySelector('.cg-reject').addEventListener('click', function() { saveConsent(false, false); });
+      banner.querySelector('.cg-accept').addEventListener('click', function() { saveConsent(true, true, 'accept_all'); });
+      banner.querySelector('.cg-reject').addEventListener('click', function() { saveConsent(false, false, 'reject_all'); });
       banner.querySelector('.cg-pref').addEventListener('click', showPreferences);
     }
 
@@ -108,7 +123,7 @@
       modal.querySelector('.cg-save').addEventListener('click', function() {
         var analytics = document.getElementById('cg-analytics').checked;
         var marketing = document.getElementById('cg-marketing').checked;
-        saveConsent(analytics, marketing);
+        saveConsent(analytics, marketing, 'custom');
       });
       modal.addEventListener('click', function(e) {
         if (e.target === modal) modal.remove();
