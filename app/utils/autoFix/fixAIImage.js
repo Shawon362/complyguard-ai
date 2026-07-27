@@ -98,7 +98,7 @@ export async function fixAIImage(admin, evidence) {
     if (!alreadyHasDisclaimer) {
       const aiDisclaimerBanner = `
 <div style="background: #FFF4E6; border-left: 4px solid #F49342; padding: 12px 16px; margin-bottom: 16px; border-radius: 4px; font-size: 14px;">
-  <strong>⚠️ AI-Generated Image Notice:</strong> Product images on this page include AI-generated visualizations. Actual product may vary. This disclosure is provided in compliance with the EU AI Act (Regulation 2024/1689, Article 50).
+  <strong>⚠️ AI-Generated Image:</strong> Some product images are AI-generated and may vary from the actual product. <em>(EU AI Act compliance)</em>
 </div>
 `;
 
