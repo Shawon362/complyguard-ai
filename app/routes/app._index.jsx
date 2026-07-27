@@ -381,7 +381,38 @@ export default function ComplyGuardDashboard() {
     <Page title="ComplyGuard AI" fullWidth>
       <BlockStack gap="500">
         <DeadlineBanner daysLeft={daysLeft} />
-
+        <Card>
+          <Box>
+            <BlockStack gap="300">
+              <BlockStack gap="100">
+                <Text as="h3" variant="headingSm">
+                  🛡️ Storefront Compliance Setup
+                </Text>
+                <Text as="p" variant="bodySm" tone="subdued">
+                  Enable these features on your storefront so visitors see your AI and cookie disclosures. Each opens your theme editor — turn the toggle on and click Save.
+                </Text>
+              </BlockStack>
+              <InlineStack gap="300" wrap>
+                <Button
+                  onClick={() => {
+                    const handle = (shop.myshopifyDomain || "").replace(".myshopify.com", "");
+                    window.open(`https://admin.shopify.com/store/${handle}/themes/current/editor?context=apps`, "_blank");
+                  }}
+                >
+                  Enable AI Badge
+                </Button>
+                <Button
+                  onClick={() => {
+                    const handle = (shop.myshopifyDomain || "").replace(".myshopify.com", "");
+                    window.open(`https://admin.shopify.com/store/${handle}/themes/current/editor?context=apps`, "_blank");
+                  }}
+                >
+                  Enable Cookie Banner
+                </Button>
+              </InlineStack>
+            </BlockStack>
+          </Box>
+        </Card>
         {actionData?.limitExceeded && (
           <Banner tone="critical" title="Scan Limit Reached">
             <p>{actionData.message}</p>
