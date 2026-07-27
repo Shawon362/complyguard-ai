@@ -117,6 +117,9 @@
         + '<div class="cg-row-desc">Used for personalized ads.</div></div>'
         + '<input type="checkbox" id="cg-marketing"></div>'
         + '<button class="cg-save">Save Preferences</button>'
+        + '<button class="cg-dns" style="margin-top:10px;width:100%;background:transparent;'
+        + 'color:#6b7280;border:1px solid #d1d5db;padding:10px;border-radius:6px;'
+        + 'font-weight:600;cursor:pointer;font-size:13px;">Do Not Sell My Personal Information</button>'
         + '</div>';
       document.body.appendChild(modal);
 
@@ -124,6 +127,9 @@
         var analytics = document.getElementById('cg-analytics').checked;
         var marketing = document.getElementById('cg-marketing').checked;
         saveConsent(analytics, marketing, 'custom');
+      });
+      modal.querySelector('.cg-dns').addEventListener('click', function() {
+        saveConsent(false, false, 'ccpa_opt_out');
       });
       modal.addEventListener('click', function(e) {
         if (e.target === modal) modal.remove();

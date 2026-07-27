@@ -46,6 +46,7 @@ export default function ConsentRecords() {
   function typeBadge(type) {
     if (type === "accept_all") return <Badge tone="success">Accepted all</Badge>;
     if (type === "reject_all") return <Badge tone="critical">Rejected all</Badge>;
+    if (type === "ccpa_opt_out") return <Badge tone="warning">CCPA opt-out</Badge>;
     return <Badge tone="info">Custom</Badge>;
   }
 
