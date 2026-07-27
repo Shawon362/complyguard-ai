@@ -1,7 +1,6 @@
 {% comment %}
-  Cookie Consent Banner (App Embed)
-  GDPR / CCPA compliance - shown to all visitors
-  Merchant enables once via App embeds toggle
+  Cookie Consent Banner with Preferences (App Embed)
+  GDPR / CCPA - granular consent (Necessary / Analytics / Marketing)
 {% endcomment %}
 
 <div id="complyguard-cookie-data"
@@ -18,30 +17,54 @@
     if (!data) return;
     if (localStorage.getItem('complyguard_consent')) return;
 
-    function showBanner() {
-      if (document.getElementById('complyguard-cookie-banner')) return;
+    var bg = data.getAttribute('data-bg');
+    var color = data.getAttribute('data-color');
+    var accept = data.getAttribute('data-accept');
+    var policyUrl = data.getAttribute('data-policy') || '/policies/privacy-policy';
 
+    function saveConsent(analytics, marketing) {
+      var consent = { necessary: true, analytics: analytics, marketing: marketing, date: new Date().toISOString() };
+      localStorage.setItem('complyguard_consent', JSON.stringify(consent));
+      var banner = document.getElementById('complyguard-cookie-banner');
+      if (banner) banner.remove();
+      var modal = document.getElementById('complyguard-pref-modal');
+      if (modal) modal.remove();
+    }
+
+    function injectStyles() {
+      if (document.getElementById('complyguard-cookie-style')) return;
       var style = document.createElement('style');
+      style.id = 'complyguard-cookie-style';
       style.textContent =
         '#complyguard-cookie-banner{position:fixed;bottom:0;left:0;right:0;z-index:99999;'
-        + 'background:' + data.getAttribute('data-bg') + ';'
-        + 'color:' + data.getAttribute('data-color') + ';'
-        + 'padding:16px 20px;box-shadow:0 -2px 12px rgba(0,0,0,0.15);'
-        + 'font-size:14px;line-height:1.5;}'
-        + '#complyguard-cookie-banner .cg-inner{max-width:1100px;margin:0 auto;'
-        + 'display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;}'
+        + 'background:' + bg + ';color:' + color + ';padding:16px 20px;'
+        + 'box-shadow:0 -2px 12px rgba(0,0,0,0.15);font-size:14px;line-height:1.5;}'
+        + '#complyguard-cookie-banner .cg-inner{max-width:1100px;margin:0 auto;display:flex;'
+        + 'flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;}'
         + '#complyguard-cookie-banner .cg-text{flex:1;min-width:240px;}'
-        + '#complyguard-cookie-banner a{color:' + data.getAttribute('data-color') + ';text-decoration:underline;}'
-        + '#complyguard-cookie-banner .cg-btns{display:flex;gap:8px;flex-shrink:0;}'
-        + '#complyguard-cookie-banner button{padding:9px 18px;border-radius:6px;cursor:pointer;'
-        + 'font-size:14px;font-weight:600;border:none;}'
-        + '#complyguard-cookie-banner .cg-reject{background:transparent;'
-        + 'border:1px solid ' + data.getAttribute('data-color') + ';'
-        + 'color:' + data.getAttribute('data-color') + ';}'
-        + '#complyguard-cookie-banner .cg-accept{background:' + data.getAttribute('data-accept') + ';color:#ffffff;}';
+        + '#complyguard-cookie-banner a{color:' + color + ';text-decoration:underline;}'
+        + '.cg-btns{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;}'
+        + '.cg-btn{padding:9px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;border:none;}'
+        + '.cg-reject{background:transparent;border:1px solid ' + color + ';color:' + color + ';}'
+        + '.cg-pref{background:transparent;border:1px solid ' + color + ';color:' + color + ';}'
+        + '.cg-accept{background:' + accept + ';color:#fff;}'
+        + '#complyguard-pref-modal{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,0.5);'
+        + 'display:flex;align-items:center;justify-content:center;padding:20px;}'
+        + '#complyguard-pref-modal .cg-box{background:#fff;color:#1f2937;border-radius:12px;'
+        + 'max-width:460px;width:100%;padding:24px;box-shadow:0 10px 40px rgba(0,0,0,0.2);}'
+        + '#complyguard-pref-modal h3{margin:0 0 8px;font-size:18px;}'
+        + '#complyguard-pref-modal .cg-row{display:flex;align-items:center;justify-content:space-between;'
+        + 'padding:12px 0;border-bottom:1px solid #eee;}'
+        + '#complyguard-pref-modal .cg-row-title{font-weight:600;font-size:14px;}'
+        + '#complyguard-pref-modal .cg-row-desc{font-size:12px;color:#6b7280;margin-top:2px;}'
+        + '#complyguard-pref-modal .cg-save{margin-top:16px;width:100%;background:' + accept + ';'
+        + 'color:#fff;border:none;padding:11px;border-radius:6px;font-weight:600;cursor:pointer;}';
       document.head.appendChild(style);
+    }
 
-      var policyUrl = data.getAttribute('data-policy') || '/policies/privacy-policy';
+    function showBanner() {
+      if (document.getElementById('complyguard-cookie-banner')) return;
+      injectStyles();
       var banner = document.createElement('div');
       banner.id = 'complyguard-cookie-banner';
       banner.innerHTML =
@@ -49,18 +72,46 @@
         + '<span class="cg-text">' + data.getAttribute('data-text')
         + ' <a href="' + policyUrl + '">Learn more</a></span>'
         + '<div class="cg-btns">'
-        + '<button class="cg-reject">Reject</button>'
-        + '<button class="cg-accept">Accept</button>'
+        + '<button class="cg-btn cg-reject">Reject All</button>'
+        + '<button class="cg-btn cg-pref">Preferences</button>'
+        + '<button class="cg-btn cg-accept">Accept All</button>'
         + '</div></div>';
       document.body.appendChild(banner);
 
-      banner.querySelector('.cg-accept').addEventListener('click', function() {
-        localStorage.setItem('complyguard_consent', 'accepted');
-        banner.remove();
+      banner.querySelector('.cg-accept').addEventListener('click', function() { saveConsent(true, true); });
+      banner.querySelector('.cg-reject').addEventListener('click', function() { saveConsent(false, false); });
+      banner.querySelector('.cg-pref').addEventListener('click', showPreferences);
+    }
+
+    function showPreferences() {
+      if (document.getElementById('complyguard-pref-modal')) return;
+      injectStyles();
+      var modal = document.createElement('div');
+      modal.id = 'complyguard-pref-modal';
+      modal.innerHTML =
+        '<div class="cg-box">'
+        + '<h3>Cookie Preferences</h3>'
+        + '<p style="font-size:13px;color:#6b7280;margin:0 0 12px;">Choose which cookies you allow. Necessary cookies are always on.</p>'
+        + '<div class="cg-row"><div><div class="cg-row-title">Necessary</div>'
+        + '<div class="cg-row-desc">Required for the site to work.</div></div>'
+        + '<input type="checkbox" checked disabled></div>'
+        + '<div class="cg-row"><div><div class="cg-row-title">Analytics</div>'
+        + '<div class="cg-row-desc">Helps us understand site usage.</div></div>'
+        + '<input type="checkbox" id="cg-analytics"></div>'
+        + '<div class="cg-row"><div><div class="cg-row-title">Marketing</div>'
+        + '<div class="cg-row-desc">Used for personalized ads.</div></div>'
+        + '<input type="checkbox" id="cg-marketing"></div>'
+        + '<button class="cg-save">Save Preferences</button>'
+        + '</div>';
+      document.body.appendChild(modal);
+
+      modal.querySelector('.cg-save').addEventListener('click', function() {
+        var analytics = document.getElementById('cg-analytics').checked;
+        var marketing = document.getElementById('cg-marketing').checked;
+        saveConsent(analytics, marketing);
       });
-      banner.querySelector('.cg-reject').addEventListener('click', function() {
-        localStorage.setItem('complyguard_consent', 'rejected');
-        banner.remove();
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) modal.remove();
       });
     }
 
