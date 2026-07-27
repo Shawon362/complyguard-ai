@@ -21,6 +21,12 @@ export const action = async ({ request }) => {
     const body = await request.json();
     const shop = body.shop || "unknown";
 
+    const country =
+      request.headers.get("cf-ipcountry") ||
+      request.headers.get("x-shopify-country") ||
+      body.country ||
+      null;
+
     await prisma.consentLog.create({
       data: {
         shop: shop,
@@ -28,7 +34,7 @@ export const action = async ({ request }) => {
         analytics: body.analytics === true,
         marketing: body.marketing === true,
         consentType: body.consentType || "custom",
-        country: body.country || null,
+        country: country,
         userAgent: request.headers.get("user-agent") || null,
       },
     });
