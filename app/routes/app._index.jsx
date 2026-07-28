@@ -170,12 +170,13 @@ export const loader = async ({ request }) => {
 
   // ── Compliance Health Score ──
   const consentCount = await prisma.consentLog.count({ where: { shop } });
+  const openIssueCount = lastScan?.issues?.length || 0;
   const healthChecks = [
     { label: "Store scanned for compliance", passed: !!lastScan },
-    { label: "AI images detected & disclosed", passed: !!lastScan && lastScan.issues !== undefined },
+    { label: "No unresolved compliance issues", passed: !!lastScan && openIssueCount === 0 },
     { label: "Cookie consent collected", passed: consentCount > 0 },
     { label: "Onboarding completed", passed: !!merchant.onboardingDone },
-    { label: "Compliance plan active", passed: (merchant.plan || "free") !== "free" || consentCount > 0 },
+    { label: "On a paid compliance plan", passed: (merchant.plan || "free") !== "free" },
   ];
   const passedChecks = healthChecks.filter((c) => c.passed).length;
   const healthScore = Math.round((passedChecks / healthChecks.length) * 100);
