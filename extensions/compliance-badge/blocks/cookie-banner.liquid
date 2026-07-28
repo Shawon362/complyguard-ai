@@ -19,30 +19,10 @@
     var data = document.getElementById('complyguard-cookie-data');
     if (!data) return;
 
-    // Floating "Cookie Settings" button to reopen consent (GDPR withdraw)
-    function addReopenButton() {
-      if (document.getElementById('complyguard-reopen')) return;
-      var btn = document.createElement('button');
-      btn.id = 'complyguard-reopen';
-      btn.innerHTML = '\uD83C\uDF6A';
-      btn.title = 'Cookie Settings';
-      btn.style.cssText = 'position:fixed;bottom:16px;left:16px;z-index:99998;width:44px;height:44px;border-radius:50%;border:none;background:' + data.getAttribute('data-bg') + ';color:' + data.getAttribute('data-color') + ';font-size:20px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.2);';
-      btn.addEventListener('click', function() {
-        localStorage.removeItem('complyguard_consent');
-        var existing = document.getElementById('complyguard-cookie-banner');
-        if (!existing) showBanner();
-      });
-      document.body.appendChild(btn);
-    }
-
-    if (localStorage.getItem('complyguard_consent')) {
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', addReopenButton);
-      } else {
-        addReopenButton();
-      }
-      return;
-    }
+    var bg = data.getAttribute('data-bg');
+    var color = data.getAttribute('data-color');
+    var accept = data.getAttribute('data-accept');
+    var policyUrl = data.getAttribute('data-policy') || '/policies/privacy-policy';
 
     // Detect visitor country (best-effort, non-blocking)
     try {
@@ -52,16 +32,10 @@
         .catch(function() {});
     } catch (e) {}
 
-    var bg = data.getAttribute('data-bg');
-    var color = data.getAttribute('data-color');
-    var accept = data.getAttribute('data-accept');
-    var policyUrl = data.getAttribute('data-policy') || '/policies/privacy-policy';
-
     function saveConsent(analytics, marketing, consentType) {
       var consent = { necessary: true, analytics: analytics, marketing: marketing, date: new Date().toISOString() };
       localStorage.setItem('complyguard_consent', JSON.stringify(consent));
 
-      // Send consent to server (GDPR proof-of-consent log) with country
       try {
         var savedCountry = window.__complyguardCountry || null;
         fetch('https://api.shopiters.com/api/consent', {
@@ -81,6 +55,7 @@
       if (banner) banner.remove();
       var modal = document.getElementById('complyguard-pref-modal');
       if (modal) modal.remove();
+      addReopenButton();
     }
 
     function injectStyles() {
@@ -114,6 +89,21 @@
       document.head.appendChild(style);
     }
 
+    function addReopenButton() {
+      if (document.getElementById('complyguard-reopen')) return;
+      var btn = document.createElement('button');
+      btn.id = 'complyguard-reopen';
+      btn.innerHTML = '\uD83C\uDF6A';
+      btn.title = 'Cookie Settings';
+      btn.style.cssText = 'position:fixed;bottom:16px;left:16px;z-index:99998;width:44px;height:44px;border-radius:50%;border:none;background:' + bg + ';color:' + color + ';font-size:20px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.2);';
+      btn.addEventListener('click', function() {
+        localStorage.removeItem('complyguard_consent');
+        var existing = document.getElementById('complyguard-cookie-banner');
+        if (!existing) showBanner();
+      });
+      document.body.appendChild(btn);
+    }
+
     function showBanner() {
       if (document.getElementById('complyguard-cookie-banner')) return;
       injectStyles();
@@ -121,7 +111,6 @@
       var country = data.getAttribute('data-country') || '';
       var euCountries = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','GB','IS','LI','NO'];
       var usState = country === 'US';
-      var isEU = euCountries.indexOf(country) !== -1;
 
       var dnsLink = usState
         ? ' <a href="#" class="cg-dns-link" style="color:inherit;text-decoration:underline;">Do Not Sell My Personal Information</a>'
@@ -191,10 +180,19 @@
       });
     }
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', showBanner);
+    // ── Entry point ──
+    if (localStorage.getItem('complyguard_consent')) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', addReopenButton);
+      } else {
+        addReopenButton();
+      }
     } else {
-      showBanner();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', showBanner);
+      } else {
+        showBanner();
+      }
     }
   })();
 </script>
