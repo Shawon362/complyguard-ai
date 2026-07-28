@@ -93,18 +93,36 @@
     function showBanner() {
       if (document.getElementById('complyguard-cookie-banner')) return;
       injectStyles();
+
+      var country = data.getAttribute('data-country') || '';
+      var euCountries = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','GB','IS','LI','NO'];
+      var usState = country === 'US';
+      var isEU = euCountries.indexOf(country) !== -1;
+
+      var dnsLink = usState
+        ? ' <a href="#" class="cg-dns-link" style="color:inherit;text-decoration:underline;">Do Not Sell My Personal Information</a>'
+        : '';
+
       var banner = document.createElement('div');
       banner.id = 'complyguard-cookie-banner';
       banner.innerHTML =
         '<div class="cg-inner">'
         + '<span class="cg-text">' + data.getAttribute('data-text')
-        + ' <a href="' + policyUrl + '">Learn more</a></span>'
+        + ' <a href="' + policyUrl + '">Learn more</a>' + dnsLink + '</span>'
         + '<div class="cg-btns">'
         + '<button class="cg-btn cg-reject">Reject All</button>'
         + '<button class="cg-btn cg-pref">Preferences</button>'
         + '<button class="cg-btn cg-accept">Accept All</button>'
         + '</div></div>';
       document.body.appendChild(banner);
+
+      var dnsEl = banner.querySelector('.cg-dns-link');
+      if (dnsEl) {
+        dnsEl.addEventListener('click', function(e) {
+          e.preventDefault();
+          saveConsent(false, false, 'ccpa_opt_out');
+        });
+      }
 
       banner.querySelector('.cg-accept').addEventListener('click', function() { saveConsent(true, true, 'accept_all'); });
       banner.querySelector('.cg-reject').addEventListener('click', function() { saveConsent(false, false, 'reject_all'); });
