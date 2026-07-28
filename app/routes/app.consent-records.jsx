@@ -25,10 +25,11 @@ export const loader = async ({ request }) => {
   const { getPlanFeatures } = await import("../utils/planLimits");
   const features = await getPlanFeatures(prisma, shop);
 
+  const recordsLimit = features.consentRecordsLimit === -1 ? undefined : features.consentRecordsLimit;
   const records = await prisma.consentLog.findMany({
     where: { shop },
     orderBy: { createdAt: "desc" },
-    take: 100,
+    take: recordsLimit,
   });
 
   const total = await prisma.consentLog.count({ where: { shop } });
@@ -119,6 +120,12 @@ export default function ConsentRecords() {
             </Card>
           </Box>
         </InlineStack>
+        )}
+
+        {features.consentRecordsLimit !== -1 && total > features.consentRecordsLimit && (
+          <Banner tone="warning" title={`Showing latest ${features.consentRecordsLimit} of ${total} records`}>
+            <p>Upgrade to Growth for unlimited consent history and export.</p>
+          </Banner>
         )}
 
         <Card padding="0">
