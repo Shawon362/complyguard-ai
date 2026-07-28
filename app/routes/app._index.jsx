@@ -173,7 +173,7 @@ export const loader = async ({ request }) => {
   const healthChecks = [
     { label: "Store scanned for compliance", passed: !!lastScan },
     { label: "AI images detected & disclosed", passed: !!lastScan && lastScan.issues !== undefined },
-    { label: "Cookie consent banner active", passed: consentCount > 0 },
+    { label: "Cookie consent collected", passed: consentCount > 0 },
     { label: "Onboarding completed", passed: !!merchant.onboardingDone },
     { label: "Compliance plan active", passed: (merchant.plan || "free") !== "free" || consentCount > 0 },
   ];
