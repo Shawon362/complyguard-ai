@@ -4,12 +4,14 @@
 {% endcomment %}
 
 {% assign cg_settings = shop.metafields.complyguard.banner_settings.value %}
+{% assign cg_country = localization.country.iso_code %}
 <div id="complyguard-cookie-data"
      data-text="{% if cg_settings.banner_text %}{{ cg_settings.banner_text }}{% else %}{{ block.settings.banner_text }}{% endif %}"
      data-bg="{% if cg_settings.bg_color %}{{ cg_settings.bg_color }}{% else %}{{ block.settings.bg_color }}{% endif %}"
      data-color="{% if cg_settings.text_color %}{{ cg_settings.text_color }}{% else %}{{ block.settings.text_color }}{% endif %}"
      data-accept="{% if cg_settings.accept_color %}{{ cg_settings.accept_color }}{% else %}{{ block.settings.accept_color }}{% endif %}"
      data-policy="{{ block.settings.policy_url }}"
+     data-country="{{ cg_country }}"
      style="display:none;"></div>
 
 <script>
