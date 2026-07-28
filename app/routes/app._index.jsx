@@ -168,11 +168,26 @@ export const loader = async ({ request }) => {
 
   const planInfo = await checkScanLimit(prisma, shop);
 
+  // ── Compliance Health Score ──
+  const consentCount = await prisma.consentLog.count({ where: { shop } });
+  const healthChecks = [
+    { label: "Store scanned for compliance", passed: !!lastScan },
+    { label: "AI images detected & disclosed", passed: !!lastScan && lastScan.issues !== undefined },
+    { label: "Cookie consent banner active", passed: consentCount > 0 },
+    { label: "Onboarding completed", passed: !!merchant.onboardingDone },
+    { label: "Compliance plan active", passed: (merchant.plan || "free") !== "free" || consentCount > 0 },
+  ];
+  const passedChecks = healthChecks.filter((c) => c.passed).length;
+  const healthScore = Math.round((passedChecks / healthChecks.length) * 100);
+
   return {
     shop: shopInfo,
     productCount: products.length,
     totalImages,
     lastScan,
+    healthChecks,
+    passedChecks,
+    healthScore,
     runningScan,
     needsOnboarding,
     onboardingStep: merchant.onboardingStep || 0,
@@ -291,7 +306,7 @@ export const action = async ({ request }) => {
 // UI COMPONENT — Dashboard Layout
 // ============================================================
 export default function ComplyGuardDashboard() {
-  const { shop, productCount, totalImages, lastScan, runningScan, needsOnboarding, onboardingStep, planInfo } = useLoaderData();
+  const { shop, productCount, totalImages, lastScan, runningScan, needsOnboarding, onboardingStep, planInfo, healthChecks, passedChecks, healthScore } = useLoaderData();
   const actionData = useActionData();
   const submit = useSubmit();
   const navigation = useNavigation();
@@ -381,6 +396,35 @@ export default function ComplyGuardDashboard() {
     <Page title="ComplyGuard AI" fullWidth>
       <BlockStack gap="500">
         <DeadlineBanner daysLeft={daysLeft} />
+        <Card>
+          <Box>
+            <BlockStack gap="300">
+              <InlineStack align="space-between" blockAlign="center">
+                <Text as="h3" variant="headingSm">
+                  📊 Compliance Health Score
+                </Text>
+                <Text as="span" variant="headingLg">
+                  {healthScore}%
+                </Text>
+              </InlineStack>
+              <Text as="p" variant="bodySm" tone="subdued">
+                {passedChecks} of {healthChecks.length} checks passing
+              </Text>
+              <BlockStack gap="150">
+                {healthChecks.map((check, i) => (
+                  <InlineStack key={i} gap="200" blockAlign="center">
+                    <Text as="span" variant="bodySm">
+                      {check.passed ? "✅" : "⬜"}
+                    </Text>
+                    <Text as="span" variant="bodySm" tone={check.passed ? "base" : "subdued"}>
+                      {check.label}
+                    </Text>
+                  </InlineStack>
+                ))}
+              </BlockStack>
+            </BlockStack>
+          </Box>
+        </Card>
         <Card>
           <Box>
             <BlockStack gap="300">
