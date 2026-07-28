@@ -410,6 +410,25 @@ export default function ComplyGuardDashboard() {
                   Enable Cookie Banner
                 </Button>
               </InlineStack>
+              <Box background="bg-surface-secondary" padding="300" borderRadius="200">
+                <BlockStack gap="200">
+                  <Text as="p" variant="bodySm" fontWeight="semibold">
+                    How to turn these on (one time):
+                  </Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    1. Click a button above — your theme editor opens on the App embeds panel.
+                  </Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    2. Find "AI Badge (Auto)" or "Cookie Consent Banner" and switch the toggle ON.
+                  </Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    3. Click Save in the top-right. That's it — the badge and banner now appear on your storefront.
+                  </Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    Tip: Customize your banner's text and colors anytime from the Banner Settings page.
+                  </Text>
+                </BlockStack>
+              </Box>
             </BlockStack>
           </Box>
         </Card>
