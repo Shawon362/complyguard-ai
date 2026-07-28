@@ -9,6 +9,7 @@ import {
   Box,
   EmptyState,
   IndexTable,
+  Banner,
 } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 
@@ -20,6 +21,9 @@ export const loader = async ({ request }) => {
   const shop = session.shop;
   const prismaModule = await import("../db.server");
   const prisma = prismaModule.default;
+
+  const { getPlanFeatures } = await import("../utils/planLimits");
+  const features = await getPlanFeatures(prisma, shop);
 
   const records = await prisma.consentLog.findMany({
     where: { shop },
@@ -35,14 +39,14 @@ export const loader = async ({ request }) => {
 
   const acceptRate = total > 0 ? Math.round((acceptedCount / total) * 100) : 0;
 
-  return { records, total, acceptedCount, rejectedCount, ccpaCount, customCount, acceptRate };
+  return { records, total, acceptedCount, rejectedCount, ccpaCount, customCount, acceptRate, features };
 };
 
 // ============================================================
 // COMPONENT
 // ============================================================
 export default function ConsentRecords() {
-  const { records, total, acceptedCount, rejectedCount, ccpaCount, customCount, acceptRate } = useLoaderData();
+  const { records, total, acceptedCount, rejectedCount, ccpaCount, customCount, acceptRate, features } = useLoaderData();
 
   function formatDate(dateString) {
     const d = new Date(dateString);
@@ -59,6 +63,12 @@ export default function ConsentRecords() {
   return (
     <Page title="Consent Records" subtitle="Proof-of-consent log for GDPR / CCPA compliance" fullWidth>
       <BlockStack gap="500">
+        {!features.consentAnalytics && (
+          <Banner tone="info" title="Unlock consent analytics">
+            <p>Upgrade to Starter or Growth to see accept rates, breakdowns, and full consent statistics.</p>
+          </Banner>
+        )}
+        {features.consentAnalytics && (
         <InlineStack gap="400" wrap>
           <Box minWidth="150px">
             <Card>
@@ -109,6 +119,7 @@ export default function ConsentRecords() {
             </Card>
           </Box>
         </InlineStack>
+        )}
 
         <Card padding="0">
           {records.length === 0 ? (

@@ -98,6 +98,12 @@ export const PLAN_LIMITS = {
     freeAutoFixCount: 3,
     pdfExport: false,
     laneSpeed: "slow",
+    // Compliance features
+    consentRecordsLimit: 50,
+    consentAnalytics: false,
+    cookieScanner: false,
+    googleConsentMode: false,
+    multiLanguage: false,
   },
   starter: {
     name: "Starter",
@@ -108,6 +114,12 @@ export const PLAN_LIMITS = {
     freeAutoFixCount: 0,
     pdfExport: true,
     laneSpeed: "normal",
+    // Compliance features
+    consentRecordsLimit: 1000,
+    consentAnalytics: true,
+    cookieScanner: false,
+    googleConsentMode: true,
+    multiLanguage: true,
   },
   growth: {
     name: "Growth",
@@ -118,6 +130,12 @@ export const PLAN_LIMITS = {
     freeAutoFixCount: 0,
     pdfExport: true,
     laneSpeed: "fast",
+    // Compliance features
+    consentRecordsLimit: -1,
+    consentAnalytics: true,
+    cookieScanner: true,
+    googleConsentMode: true,
+    multiLanguage: true,
   },
 };
 
@@ -159,8 +177,23 @@ export async function getCurrentMonthScans(prisma, shop) {
 }
 
 // ============================================================
-// Check if user can scan
+// Get compliance features for a merchant's plan
 // ============================================================
+export async function getPlanFeatures(prisma, shop) {
+  const merchant = await prisma.merchant.findUnique({ where: { shop } });
+  const plan = merchant?.plan || "free";
+  const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+  return {
+    plan: plan,
+    planName: limits.name,
+    consentRecordsLimit: limits.consentRecordsLimit,
+    consentAnalytics: limits.consentAnalytics,
+    cookieScanner: limits.cookieScanner,
+    googleConsentMode: limits.googleConsentMode,
+    multiLanguage: limits.multiLanguage,
+  };
+}
+
 export async function checkScanLimit(prisma, shop) {
   const merchant = await prisma.merchant.findUnique({ where: { shop } });
   const plan = merchant?.plan || "free";
