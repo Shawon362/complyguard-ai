@@ -229,7 +229,7 @@ export default function OnboardingFlow({ initialStep = 0 }) {
                             <Icon source={CashDollarIcon} tone="critical" />
                           </div>
                           <Text as="p" variant="bodyMd" fontWeight="semibold">
-                            Non-compliance penalties: Up to €7.5M or 1.5% of annual global turnover
+                            Non-compliance penalties: Up to €15M or 3% of annual global turnover
                           </Text>
                         </InlineStack>
                       </div>

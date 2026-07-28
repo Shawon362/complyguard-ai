@@ -8,7 +8,7 @@ export default function DeadlineBanner({ daysLeft }) {
     >
       <p>
         Starting August 2, 2026, EU AI Act Article 50 will be enforced.
-        Fines up to €7.5M or 1.5% of global revenue.
+        Fines up to €15M or 3% of global revenue.
         Scan your store now to ensure compliance.
       </p>
     </Banner>
