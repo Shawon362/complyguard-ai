@@ -59,9 +59,30 @@ export const action = async ({ request }) => {
     accept_color: formData.get("accept_color") || "#3B82F6",
   };
 
+  // Get shop id
   const shopRes = await admin.graphql(`query { shop { id } }`);
   const shopData = await shopRes.json();
   const shopId = shopData.data.shop.id;
+
+  try {
+    await admin.graphql(`
+      mutation {
+        metafieldDefinitionCreate(definition: {
+          name: "Cookie Banner Settings"
+          namespace: "complyguard"
+          key: "banner_settings"
+          type: "json"
+          ownerType: SHOP
+          access: { storefront: PUBLIC_READ }
+        }) {
+          createdDefinition { id }
+          userErrors { field message }
+        }
+      }
+    `);
+  } catch (defError) {
+    console.log(">>> Banner settings definition ensure (non-blocking):", defError.message);
+  }
 
   const response = await admin.graphql(`
     mutation setMetafield($metafields: [MetafieldsSetInput!]!) {
