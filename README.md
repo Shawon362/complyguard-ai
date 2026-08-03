@@ -1,237 +1,509 @@
-# Shopify App Template - React Router
+# 🛡️ ComplyGuard AI — Complete Technical Documentation & Deployment Guide
 
-This is a template for building a [Shopify app](https://shopify.dev/docs/apps/getting-started) using [React Router](https://reactrouter.com/). It was forked from the [Shopify Remix app template](https://github.com/Shopify/shopify-app-template-remix) and converted to React Router.
+> **App Title:** ComplyGuard AI (EU AI Act & GDPR Compliance Suite for Shopify)  
+> **Target Standard:** EU AI Act Article 50 Transparency Directives, GDPR & E-Privacy Compliance  
+> **Architecture:** Modern Shopify App (Remix Framework, React, Shopify App Bridge, Prisma ORM, Theme App Extensions & Checkout UI Extensions)
 
-Rather than cloning this repo, follow the [Quick Start steps](https://github.com/Shopify/shopify-app-template-react-router#quick-start).
+---
 
-Visit the [`shopify.dev` documentation](https://shopify.dev/docs/api/shopify-app-react-router) for more details on the React Router app package.
+## 📐 Table of Contents
+1. [Executive Summary & Core Objective](#1-executive-summary--core-objective)
+2. [Complete Tech Stack Breakdown](#2-complete-tech-stack-breakdown)
+3. [End-to-End System Architecture & Data Flow](#3-end-to-end-system-architecture--data-flow)
+4. [Step-by-Step Execution Lifecycle](#4-step-by-step-execution-lifecycle)
+5. [In-Depth Feature Analysis (A to Z)](#5-in-depth-feature-analysis-a-to-z)
+6. [Prisma Database Schema & Models](#6-prisma-database-schema--models)
+7. [App Routes & API Endpoints Reference](#7-app-routes--api-endpoints-reference)
+8. [Core Modules & Utility Functions Deep-Dive](#8-core-modules--utility-functions-deep-dive)
+9. [Shopify Extensions (Theme App & Checkout UI)](#9-shopify-extensions-theme-app--checkout-ui)
+10. [Secret Super-Admin Portal (`/admin`)](#10-secret-super-admin-portal-admin)
+11. [Local Development Guide](#11-local-development-guide)
+12. [CloudPanel Production Deployment & Updates](#12-cloudpanel-production-deployment--updates)
+13. [Deploying Shopify Extensions (`shopify app deploy`)](#13-deploying-shopify-extensions-shopify-app-deploy)
 
-## Upgrading from Remix
+---
 
-If you have an existing Remix app that you want to upgrade to React Router, please follow the [upgrade guide](https://github.com/Shopify/shopify-app-template-react-router/wiki/Upgrading-from-Remix). Otherwise, please follow the quick start guide below.
+## 📌 1. Executive Summary & Core Objective
 
-## Quick start
+### What is this App?
+**ComplyGuard AI** is a full-stack Shopify application built to help e-commerce merchants analyze, monitor, and enforce compliance with the **European Union Artificial Intelligence Act (EU AI Act Article 50)** as well as broader GDPR consent regulations.
 
-### Prerequisites
+Under Article 50 of the EU AI Act, any e-commerce merchant selling to consumers in the European Union that utilizes Artificial Intelligence (AI) — such as AI-generated product images, AI chatbots, automated description generators, or recommendation engines — is legally mandated to **explicitly declare and label** synthetic media and AI interactions transparently.
 
-Before you begin, you'll need to [download and install the Shopify CLI](https://shopify.dev/docs/apps/tools/cli/getting-started) if you haven't already.
+### Core Value Proposition:
+1. **Automated Store Auditing & AI Detection:** Scans product images, descriptions, installed third-party Shopify AI apps, and legal store policies.
+2. **One-Click Auto-Fixing (AI & Rule-Based):** Updates product image Alt Texts with `[AI-Generated]` labels, updates legal Privacy Policies/Terms, and marks processed image caches.
+3. **Frontend Compliance Display Widgets:** Theme App Extensions and Checkout Extensions that display floating AI transparency badges, cookie consent banners, and checkout disclosures to visitors.
+4. **Audit Reports & Certification:** Generates official PDF compliance certificates and keeps auditable consent logs to protect store owners against regulatory fines.
 
-### Setup
+---
 
-```shell
-shopify app init --template=https://github.com/Shopify/shopify-app-template-react-router
+## 🛠 2. Complete Tech Stack Breakdown
+
+### 1. Frontend & Presentation Layer
+* **Framework:** Remix v2 (React Router, Server-Side Rendering with `loader` and `action` functions).
+* **UI Components:** Shopify Polaris (`@shopify/polaris`) — Official Shopify Admin UI design system.
+* **App Bridge Integration:** `@shopify/app-bridge-react` for native modals, toast notifications, and embedded admin navigation.
+* **Icons & Styling:** Polaris Icons, Custom CSS Modules (`app/routes/_index/styles.module.css`, `public/polaris.css`).
+
+### 2. Backend Runtime & APIs
+* **Runtime:** Node.js (ES Modules).
+* **Framework Integration:** `@shopify/shopify-app-remix` (handles OAuth 2.0, session storage, webhook authentication, and GraphQL Admin API client).
+* **GraphQL & REST Admin APIs:** For querying shop products, theme Liquid assets, webhooks, and billing subscriptions.
+* **AI Analysis Engines:** Multi-provider API architecture integrating **OpenAI, Anthropic Claude, Google Gemini, Oxyy API, and Flux** with dynamic fallback & priority scheduling.
+
+### 3. Database & ORM
+* **ORM:** Prisma v5 (`prisma/schema.prisma`).
+* **Database Drivers:** SQLite for local/testing environments (`dev.sqlite`), PostgreSQL ready for production environments.
+
+### 4. Extensions Framework
+* **Theme App Extension (Liquid & Vanilla JS):**
+  * `ai-badge-embed.liquid`: Product page embedded badge.
+  * `ai-badge.liquid`: Store-wide AI disclosure badge.
+  * `cookie-banner.liquid`: GDPR & EU AI Act cookie consent banner.
+* **Checkout UI Extension (`checkout-ui`):** Written in React using `@shopify/ui-extensions-react/checkout`.
+
+---
+
+## 🏗 3. End-to-End System Architecture & Data Flow
+
+```
++-----------------------------------------------------------------------------------+
+|                                 SHOPIFY STOREFRONT                                |
+|  [Cookie Banner]  -->  [Consent API (/api/consent)]  -->  [Prisma: ConsentLog]    |
+|  [Product Badge]  -->  [Liquid Theme Extension]                                  |
+|  [Checkout Disclosure]  -->  [Checkout UI Extension]                           |
++-----------------------------------------------------------------------------------+
+                                          ^
+                                          |
++-----------------------------------------------------------------------------------+
+|                                SHOPIFY ADMIN APP                                  |
+|                                                                                   |
+|  1. Merchant Clicks "Start Compliance Scan"                                        |
+|  2. app/routes/app._index.jsx triggers Background Worker (scan-runner.server.js)  |
+|  3. fetchProducts.js fetches products/images via Shopify GraphQL API              |
+|  4. scanAIApps.js checks installed apps against AI database                        |
+|  5. ai-detector.server.js sends images to AI API (Gemini/OpenAI/Oxyy)            |
+|  6. Check Prisma: AnalyzedImage cache -> Save API cost if hash exists              |
+|  7. checkPolicies.js evaluates Privacy Policy & Terms of Service                  |
+|  8. calculateScore.js computes Grade (A-F) & Score (0-100)                        |
+|  9. Issues written to Prisma: Scan & Issue models                                 |
+| 10. Merchant triggers Auto-Fix All -> fixAltText, fixPrivacyPolicy executed       |
+| 11. PDF Certificate generated via generatePDF.js & PDFReportTemplate.jsx          |
++-----------------------------------------------------------------------------------+
+                                          ^
+                                          |
++-----------------------------------------------------------------------------------+
+|                             INTERNAL ADMIN PORTAL (/admin)                         |
+|  - Manages API Keys & Priority Fallbacks (apiKeyManager.server.js)                |
+|  - Tracks Global Merchants, Revenue, Usage, and Rate Limits                       |
++-----------------------------------------------------------------------------------+
 ```
 
-### Local Development
+---
 
-```shell
-shopify app dev
-```
+## 🔄 4. Step-by-Step Execution Lifecycle
 
-Press P to open the URL to your app. Once you click install, you can start development.
+### Step 1: Installation & OAuth
+1. Merchant installs ComplyGuard AI via Shopify App Store.
+2. `app/shopify.server.js` handles OAuth 2.0 handshake.
+3. Access tokens stored in `Session` table; shop profile initialized in `Merchant` table.
 
-Local development is powered by [the Shopify CLI](https://shopify.dev/docs/apps/tools/cli). It logs into your account, connects to an app, provides environment variables, updates remote config, creates a tunnel and provides commands to generate extensions.
+### Step 2: Store Onboarding
+1. Merchant lands on `/app` (`app/routes/app._index.jsx`).
+2. `OnboardingFlow.jsx` detects new store and guides merchant through baseline setup and initial scan.
 
-### Authenticating and querying data
+### Step 3: Audit Execution Engine (`app/scan-runner.server.js`)
+1. **Product Scan (`fetchProducts.js`):** Fetches store catalog via GraphQL Admin API.
+2. **AI Image Analysis (`scanAIApps.js` & `ai-detector.server.js`):** Checks `AnalyzedImage` cache table; uncached images are sent to AI API provider.
+3. **App Ecosystem Audit (`ai-apps-database.js`):** Identifies installed third-party AI apps.
+4. **Policy Inspection (`checkPolicies.js`):** Scans store policies for mandatory transparency disclosures.
+5. **Scoring (`calculateScore.js` & `buildIssues.js`):** Generates Grade (`A` to `F`), numerical score, and structured issue tickets.
 
-To authenticate and query data you can use the `shopify` const that is exported from `/app/shopify.server.js`:
+### Step 4: One-Click Auto-Fix Execution (`app/routes/app.auto-fix-all.jsx`)
+1. **Alt Text Fix (`fixAltText.js`):** Appends `[AI-Generated]` to product image alt tags via GraphQL.
+2. **Policy Fix (`fixPrivacyPolicy.js`, `fixTerms.js`):** Auto-injects legal disclosure clauses into store policies.
+3. **Cache Update (`fixAIImage.js`):** Updates image status in `AnalyzedImage` table.
+4. **Score Recalculation (`recalculateScore.js`):** Recomputes overall store score upon issue resolution.
 
-```js
-export async function loader({ request }) {
-  const { admin } = await shopify.authenticate.admin(request);
+---
 
-  const response = await admin.graphql(`
-    {
-      products(first: 25) {
-        nodes {
-          title
-          description
-        }
-      }
-    }`);
+## ✨ 5. In-Depth Feature Analysis (A to Z)
 
-  const {
-    data: {
-      products: { nodes },
-    },
-  } = await response.json();
+* **A — AI App Scanner:** Detects third-party AI apps running on the store by matching them against a curated database (`ai-apps-database.js`).
+* **B — Banner Customizer (`app.banner-settings.jsx`):** Customizes colors, text, position, and compliance modes for storefront cookie banners.
+* **C — Checkout Compliance UI (`checkout-ui`):** Injects mandatory customer disclosures into the Shopify Checkout flow.
+* **D — Deadline Countdown Banner (`DeadlineCountdownCard.jsx`):** Displays countdown indicators for legal compliance enforcement dates.
+* **E — Escalation & Severity Tracking:** Issues categorized into `Critical`, `High`, `Medium`, and `Low` risk levels.
+* **F — Free Auto-Fix Allocation:** Automatically manages free auto-fix limits based on subscription tier (`freeAutoFixesUsed`).
+* **G — Grade Calculation (`ComplianceGradeCard.jsx`):** Computes store compliance grade (`A` to `F`).
+* **H — Historical Audit Trail (`app.history.jsx`):** Keeps full logs of all previous scans, resolved issues, and score progression.
+* **I — Image Detection Cache (`AnalyzedImage`):** Caches image analysis results to prevent duplicate API costs.
+* **M — Multi-Tier Billing (`app.pricing.jsx`, `planLimits.js`):** Supports `Free`, `Starter`, `Pro`, and `Enterprise` plans integrated with Shopify Recurring Charges API.
+* **P — PDF Audit Certificates (`generatePDF.js`, `PDFReportTemplate.jsx`):** Generates official downloadable PDF compliance proof for EU regulators.
+* **S — Secret Super-Admin Portal (`/admin`):** Internal management dashboard for API keys, merchant tracking, usage analytics, and revenue reports.
 
-  return nodes;
+---
+
+## 🗄 6. Prisma Database Schema & Models
+
+```prisma
+datasource db {
+  provider = "sqlite"
+  url      = "file:dev.sqlite"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. Session Storage
+model Session {
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+// 2. Scan Tracking
+model Scan {
+  id                String    @id @default(cuid())
+  shop              String
+  status            String    @default("running") // running, completed, failed
+  grade             String?   // A, B, C, D, F
+  score             Int?      // 0 - 100
+  totalProducts     Int       @default(0)
+  totalImages       Int       @default(0)
+  totalPages        Int       @default(0)
+
+  criticalCount     Int       @default(0)
+  highCount         Int       @default(0)
+  mediumCount       Int       @default(0)
+  lowCount          Int       @default(0)
+
+  currentPhase      String    @default("queued")
+  progress          Int       @default(0)
+  imagesProcessed   Int       @default(0)
+  imagesTotal       Int       @default(0)
+  errorMessage      String?
+  freeAutoFixesUsed Int       @default(0)
+
+  createdAt         DateTime  @default(now())
+  completedAt       DateTime?
+  issues            Issue[]
+}
+
+// 3. Identified Compliance Issues
+model Issue {
+  id               String    @id @default(cuid())
+  shop             String
+  category         String    // ai_image, ai_text, policy, cookie
+  article          String    // e.g., "EU AI Act Article 50"
+  severity         String    // critical, high, medium, low
+  title            String
+  description      String
+  evidence         String
+  fixAvailable     Boolean   @default(false)
+  fixAction        String?
+  suggestedFix     String?
+  status           String    @default("open") // open, fixed, acknowledged
+  fixedAt          DateTime?
+  fixDetails       String?
+  acknowledgedAt   DateTime?
+  acknowledgedNote String?
+  createdAt        DateTime  @default(now())
+  scanId           String
+  scan             Scan      @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  @@index([scanId])
+  @@index([shop])
+}
+
+// 4. Merchant Store Profile & Plan
+model Merchant {
+  id              String    @id @default(cuid())
+  shop            String    @unique
+  onboardingDone  Boolean   @default(false)
+  onboardingStep  Int       @default(0)
+  storeName       String?
+  storeUrl        String?
+  plan            String    @default("free") // free, starter, pro, enterprise
+  planStartDate   DateTime? @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// 5. Visitor Consent Audit Log
+model ConsentLog {
+  id           String   @id @default(cuid())
+  shop         String
+  necessary    Boolean  @default(true)
+  analytics    Boolean  @default(false)
+  marketing    Boolean  @default(false)
+  consentType  String   @default("custom")
+  country      String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@index([shop])
+}
+
+// 6. AI Image Cache
+model AnalyzedImage {
+  id            String   @id @default(cuid())
+  shop          String
+  imageUrl      String
+  isAI          Boolean
+  confidence    Float
+  reasoning     String?
+  hasPeople     Boolean  @default(false)
+  hasText       Boolean  @default(false)
+  hasAISigns    Boolean  @default(false)
+  analyzedAt    DateTime @default(now())
+  lastSeenAt    DateTime @default(now())
+
+  @@unique([shop, imageUrl])
+  @@index([shop])
+  @@index([analyzedAt])
+}
+
+// 7. Internal Admin Users
+model AdminUser {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  role          String    @default("admin")
+  lastLogin     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// 8. API Quota & Usage Analytics
+model ApiUsage {
+  id              String   @id @default(cuid())
+  shop            String
+  date            DateTime @default(now())
+  provider        String   @default("gemini")
+  callsCount      Int      @default(0)
+  imagesProcessed Int      @default(0)
+  cacheHits       Int      @default(0)
+  estimatedCost   Float    @default(0)
+  createdAt       DateTime @default(now())
+
+  @@index([shop, date])
+  @@index([date])
+}
+
+// 9. Multi-Provider API Keys
+model ApiKey {
+  id               String    @id @default(cuid())
+  name             String
+  provider         String    // openai, claude, gemini, oxyy
+  apiKey           String   
+  baseUrl          String?
+  modelName        String 
+  priority         Int       @default(100) 
+  isActive         Boolean   @default(true)
+  totalCalls       Int       @default(0)
+  totalErrors      Int       @default(0)
+  lastUsedAt       DateTime?
+  lastErrorAt      DateTime?
+  lastErrorMessage String?
+  lastTestedAt     DateTime?
+  lastTestSuccess  Boolean?
+  createdBy        String 
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([provider, priority])
+  @@index([isActive])
+}
+
+// 10. Rate Limits & Overrides
+model RateLimitOverride {
+  id              String   @id @default(cuid())
+  shop            String   @unique
+  dailyApiLimit   Int? 
+  monthlyApiLimit Int?
+  notes           String?
+  setByAdmin      String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  adminEmail  String
+  action      String 
+  targetShop  String?
+  details     String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([adminEmail])
 }
 ```
 
-This template comes pre-configured with examples of:
+---
 
-1. Setting up your Shopify app in [/app/shopify.server.ts](https://github.com/Shopify/shopify-app-template-react-router/blob/main/app/shopify.server.ts)
-2. Querying data using Graphql. Please see: [/app/routes/app.\_index.tsx](https://github.com/Shopify/shopify-app-template-react-router/blob/main/app/routes/app._index.tsx).
-3. Responding to webhooks. Please see [/app/routes/webhooks.tsx](https://github.com/Shopify/shopify-app-template-react-router/blob/main/app/routes/webhooks.app.uninstalled.tsx).
-4. Using metafields, metaobjects, and declarative custom data definitions. Please see [/app/routes/app.\_index.tsx](https://github.com/Shopify/shopify-app-template-react-router/blob/main/app/routes/app._index.tsx) and [shopify.app.toml](https://github.com/Shopify/shopify-app-template-react-router/blob/main/shopify.app.toml).
+## 🌐 7. App Routes & API Endpoints Reference
 
-Please read the [documentation for @shopify/shopify-app-react-router](https://shopify.dev/docs/api/shopify-app-react-router) to see what other API's are available.
+### Merchant Admin Routes (`app/routes/app.*`)
+* `app._index.jsx`: Main dashboard featuring score, onboarding, scan trigger, and issue summary.
+* `app.auto-fix-all.jsx`: Action route handling one-click auto-fixing.
+* `app.banner-settings.jsx`: Customizer UI for storefront cookie banners.
+* `app.cookie-scanner.jsx`: Scanner interface for tracking scripts and cookies.
+* `app.history.jsx`: Historical compliance scan logs and score progression.
+* `app.issue-acknowledge.jsx`: Route for manually acknowledging warnings.
+* `app.pricing.jsx`: Subscription plans integrated with Shopify Billing API.
+* `app.scan-status.jsx`: Real-time polling API endpoint returning current scan progress.
+* `app.update-issue.jsx`: Applies single-issue fixes.
+* `app.consent-records.jsx`: Displays visitor consent records.
 
-## Shopify Dev MCP
+### Public & Webhook Routes (`app/routes/*`)
+* `api.consent.jsx`: Public API endpoint called by storefront cookie banner to log visitor consent.
+* `privacy.jsx` & `terms.jsx`: App privacy policy and terms of service pages.
+* `webhooks.app.uninstalled.jsx`: Handles app uninstallation cleanup.
+* `webhooks.app_subscriptions_update.jsx`: Syncs subscription plan changes.
+* `webhooks.customers.redact.jsx`, `webhooks.customers.data_request.jsx`, `webhooks.shop.redact.jsx`: Mandatory GDPR webhook handlers.
 
-This template is configured with the Shopify Dev MCP. This instructs [Cursor](https://cursor.com/), [GitHub Copilot](https://github.com/features/copilot) and [Claude Code](https://claude.com/product/claude-code) and [Google Gemini CLI](https://github.com/google-gemini/gemini-cli) to use the Shopify Dev MCP.
+---
 
-For more information on the Shopify Dev MCP please read [the documentation](https://shopify.dev/docs/apps/build/devmcp).
+## 🧰 8. Core Modules & Utility Functions Deep-Dive
 
-## Deployment
+### Scanning Utilities (`app/utils/scan/*`)
+1. **`index.js`:** Main orchestrator function for scanning pipeline.
+2. **`fetchProducts.js`:** Retrieves products, descriptions, and media URLs via GraphQL.
+3. **`scanAIApps.js`:** Matches installed apps against `ai-apps-database.js`.
+4. **`checkPolicies.js`:** Inspects store policies for mandatory legal disclosures.
+5. **`calculateScore.js` & `buildIssues.js`:** Computes score/grade ratings and generates issue tickets.
 
-### Application Storage
+### Auto-Fix Utilities (`app/utils/autoFix/*`)
+1. **`fixAltText.js`:** Updates image Alt tags via GraphQL Admin API.
+2. **`fixPrivacyPolicy.js` & `fixTerms.js`:** Appends legal AI disclosure clauses to store policies.
+3. **`fixAIImage.js`:** Updates image cache state in database.
+4. **`recalculateScore.js`:** Recomputes compliance score in real time after issue resolution.
 
-This template uses [Prisma](https://www.prisma.io/) to store session data, by default using an [SQLite](https://www.sqlite.org/index.html) database.
-The database is defined as a Prisma schema in `prisma/schema.prisma`.
+---
 
-This use of SQLite works in production if your app runs as a single instance.
-The database that works best for you depends on the data your app needs and how it is queried.
-Here’s a short list of databases providers that provide a free tier to get started:
+## 🎨 9. Shopify Extensions (Theme App & Checkout UI)
 
-| Database   | Type             | Hosters                                                                                                                                                                                                                                    |
-| ---------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| MySQL      | SQL              | [Digital Ocean](https://www.digitalocean.com/products/managed-databases-mysql), [Planet Scale](https://planetscale.com/), [Amazon Aurora](https://aws.amazon.com/rds/aurora/), [Google Cloud SQL](https://cloud.google.com/sql/docs/mysql) |
-| PostgreSQL | SQL              | [Digital Ocean](https://www.digitalocean.com/products/managed-databases-postgresql), [Amazon Aurora](https://aws.amazon.com/rds/aurora/), [Google Cloud SQL](https://cloud.google.com/sql/docs/postgres)                                   |
-| Redis      | Key-value        | [Digital Ocean](https://www.digitalocean.com/products/managed-databases-redis), [Amazon MemoryDB](https://aws.amazon.com/memorydb/)                                                                                                        |
-| MongoDB    | NoSQL / Document | [Digital Ocean](https://www.digitalocean.com/products/managed-databases-mongodb), [MongoDB Atlas](https://www.mongodb.com/atlas/database)                                                                                                  |
+### 1. Theme App Extension (`extensions/compliance-badge/`)
+* `blocks/ai-badge-embed.liquid`: Embeds an inline AI disclosure badge on product pages.
+* `blocks/ai-badge.liquid`: Floating storewide compliance badge.
+* `blocks/cookie-banner.liquid`: Storefront banner capturing visitor consents and transmitting telemetry to `/api/consent`.
 
-To use one of these, you can use a different [datasource provider](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#datasource) in your `schema.prisma` file, or a different [SessionStorage adapter package](https://github.com/Shopify/shopify-api-js/blob/main/packages/shopify-api/docs/guides/session-storage.md).
+### 2. Checkout UI Extension (`extensions/checkout-ui/`)
+* Injects mandatory EU AI Act transparency disclosures directly into the checkout pipeline prior to order placement.
 
-### Build
+---
 
-Build the app by running the command below with the package manager of your choice:
+## 🔐 10. Secret Super-Admin Portal (`/admin`)
 
-Using yarn:
+Located under `/admin`:
+* **/admin/login & /admin/logout:** Session-based authentication (`AdminUser` model).
+* **/admin/dashboard:** Global metrics across all installed merchant stores.
+* **/admin/api-keys:** Multi-provider API key management (OpenAI, Gemini, Claude, Oxyy) with failover scheduling.
+* **/admin/merchants:** View active merchants, manually override plan limits, or reset stuck scans.
+* **/admin/revenue & /admin/usage:** Billing analytics, cache hit rates, and API consumption tracking.
 
-```shell
-yarn build
-```
+---
 
-Using npm:
+## 💻 11. Local Development Guide
 
-```shell
+### Prerequisites:
+- Node.js v18.0.0+
+- Shopify CLI (`npm install -g @shopify/cli`)
+- Shopify Partner Account & Development Store
+
+### Steps:
+1. **Create `.env` file:**
+   ```env
+   SHOPIFY_API_KEY="your_shopify_app_api_key"
+   SHOPIFY_API_SECRET="your_shopify_app_api_secret"
+   SCOPES="read_products,write_products,read_themes,write_themes,read_script_tags,write_script_tags"
+   SHOPIFY_APP_URL="https://your-ngrok-or-cloud-url.io"
+   DATABASE_URL="file:./dev.sqlite"
+   ADMIN_JWT_SECRET="your-super-secret-admin-jwt-key"
+   ```
+
+2. **Install & Setup Database:**
+   ```bash
+   npm install
+   npx prisma migrate dev
+   node scripts/create-admin.js
+   ```
+
+3. **Start Development Server:**
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## 🚀 12. CloudPanel Production Deployment & Updates
+
+When hosting ComplyGuard AI on **CloudPanel** (Node.js Site context):
+
+### Step-by-Step Code Update Sequence on CloudPanel
+
+```bash
+# 1. SSH into CloudPanel server and navigate to app root
+cd /home/cloudpanel/htdocs/app.complyguard.ai
+
+# 2. Pull latest code from Git
+git pull origin main
+
+# 3. Install dependencies
+npm install --production=false
+
+# 4. Run Prisma migrations
+npx prisma migrate deploy
+
+# 5. Re-generate Prisma client
+npx prisma generate
+
+# 6. Build Remix production bundle
 npm run build
+
+# 7. Restart application process via PM2
+pm2 restart complyguard-ai
 ```
 
-Using pnpm:
+---
 
-```shell
-pnpm run build
-```
+## 📦 13. Deploying Shopify Extensions (`shopify app deploy`)
 
-## Hosting
+Updating Remix server code via `git pull` on CloudPanel updates the backend, but **Theme App Extensions** (`extensions/compliance-badge`) and **Checkout UI Extensions** (`extensions/checkout-ui`) must be pushed directly to Shopify's CDN via Shopify CLI.
 
-When you're ready to set up your app in production, you can follow [our deployment documentation](https://shopify.dev/docs/apps/launch/deployment) to host it externally. From there, you have a few options:
+### How to Deploy Extension Updates:
 
-- [Google Cloud Run](https://shopify.dev/docs/apps/launch/deployment/deploy-to-google-cloud-run): This tutorial is written specifically for this example repo, and is compatible with the extended steps included in the subsequent [**Build your app**](tutorial) in the **Getting started** docs. It is the most detailed tutorial for taking a React Router-based Shopify app and deploying it to production. It includes configuring permissions and secrets, setting up a production database, and even hosting your apps behind a load balancer across multiple regions.
-- [Fly.io](https://fly.io/docs/js/shopify/): Leverages the Fly.io CLI to quickly launch Shopify apps to a single machine.
-- [Render](https://render.com/docs/deploy-shopify-app): This tutorial guides you through using Docker to deploy and install apps on a Dev store.
-- [Manual deployment guide](https://shopify.dev/docs/apps/launch/deployment/deploy-to-hosting-service): This resource provides general guidance on the requirements of deployment including environment variables, secrets, and persistent data.
+1. On your local development machine, make required edits to Liquid or Checkout UI code.
+2. Authenticate CLI if needed:
+   ```bash
+   npx shopify auth login
+   ```
+3. Run deploy command:
+   ```bash
+   npx shopify app deploy
+   ```
+4. Confirm release prompt. Shopify will build, version, and release the new extension bundle across all installed merchant stores automatically.
 
-When you reach the step for [setting up environment variables](https://shopify.dev/docs/apps/deployment/web#set-env-vars), you also need to set the variable `NODE_ENV=production`.
-
-## Gotchas / Troubleshooting
-
-### Database tables don't exist
-
-If you get an error like:
-
-```
-The table `main.Session` does not exist in the current database.
-```
-
-Create the database for Prisma. Run the `setup` script in `package.json` using `npm`, `yarn` or `pnpm`.
-
-### Navigating/redirecting breaks an embedded app
-
-Embedded apps must maintain the user session, which can be tricky inside an iFrame. To avoid issues:
-
-1. Use `Link` from `react-router` or `@shopify/polaris`. Do not use `<a>`.
-2. Use `redirect` returned from `authenticate.admin`. Do not use `redirect` from `react-router`
-3. Use `useSubmit` from `react-router`.
-
-This only applies if your app is embedded, which it will be by default.
-
-### Webhooks: shop-specific webhook subscriptions aren't updated
-
-If you are registering webhooks in the `afterAuth` hook, using `shopify.registerWebhooks`, you may find that your subscriptions aren't being updated.
-
-Instead of using the `afterAuth` hook declare app-specific webhooks in the `shopify.app.toml` file. This approach is easier since Shopify will automatically sync changes every time you run `deploy` (e.g: `npm run deploy`). Please read these guides to understand more:
-
-1. [app-specific vs shop-specific webhooks](https://shopify.dev/docs/apps/build/webhooks/subscribe#app-specific-subscriptions)
-2. [Create a subscription tutorial](https://shopify.dev/docs/apps/build/webhooks/subscribe/get-started?deliveryMethod=https)
-
-If you do need shop-specific webhooks, keep in mind that the package calls `afterAuth` in 2 scenarios:
-
-- After installing the app
-- When an access token expires
-
-During normal development, the app won't need to re-authenticate most of the time, so shop-specific subscriptions aren't updated. To force your app to update the subscriptions, uninstall and reinstall the app. Revisiting the app will call the `afterAuth` hook.
-
-### Webhooks: Admin created webhook failing HMAC validation
-
-Webhooks subscriptions created in the [Shopify admin](https://help.shopify.com/en/manual/orders/notifications/webhooks) will fail HMAC validation. This is because the webhook payload is not signed with your app's secret key.
-
-The recommended solution is to use [app-specific webhooks](https://shopify.dev/docs/apps/build/webhooks/subscribe#app-specific-subscriptions) defined in your toml file instead. Test your webhooks by triggering events manually in the Shopify admin(e.g. Updating the product title to trigger a `PRODUCTS_UPDATE`).
-
-### Webhooks: Admin object undefined on webhook events triggered by the CLI
-
-When you trigger a webhook event using the Shopify CLI, the `admin` object will be `undefined`. This is because the CLI triggers an event with a valid, but non-existent, shop. The `admin` object is only available when the webhook is triggered by a shop that has installed the app. This is expected.
-
-Webhooks triggered by the CLI are intended for initial experimentation testing of your webhook configuration. For more information on how to test your webhooks, see the [Shopify CLI documentation](https://shopify.dev/docs/apps/tools/cli/commands#webhook-trigger).
-
-### Incorrect GraphQL Hints
-
-By default the [graphql.vscode-graphql](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql) extension for will assume that GraphQL queries or mutations are for the [Shopify Admin API](https://shopify.dev/docs/api/admin). This is a sensible default, but it may not be true if:
-
-1. You use another Shopify API such as the storefront API.
-2. You use a third party GraphQL API.
-
-If so, please update [.graphqlrc.ts](https://github.com/Shopify/shopify-app-template-react-router/blob/main/.graphqlrc.ts).
-
-### Using Defer & await for streaming responses
-
-By default the CLI uses a cloudflare tunnel. Unfortunately cloudflare tunnels wait for the Response stream to finish, then sends one chunk. This will not affect production.
-
-To test [streaming using await](https://reactrouter.com/api/components/Await#await) during local development we recommend [localhost based development](https://shopify.dev/docs/apps/build/cli-for-apps/networking-options#localhost-based-development).
-
-### "nbf" claim timestamp check failed
-
-This is because a JWT token is expired. If you are consistently getting this error, it could be that the clock on your machine is not in sync with the server. To fix this ensure you have enabled "Set time and date automatically" in the "Date and Time" settings on your computer.
-
-### Using MongoDB and Prisma
-
-If you choose to use MongoDB with Prisma, there are some gotchas in Prisma's MongoDB support to be aware of. Please see the [Prisma SessionStorage README](https://www.npmjs.com/package/@shopify/shopify-app-session-storage-prisma#mongodb).
-
-### Unable to require(`C:\...\query_engine-windows.dll.node`).
-
-Unable to require(`C:\...\query_engine-windows.dll.node`).
-The Prisma engines do not seem to be compatible with your system.
-
-query_engine-windows.dll.node is not a valid Win32 application.
-
-**Fix:** Set the environment variable:
-
-```shell
-PRISMA_CLIENT_ENGINE_TYPE=binary
-```
-
-This forces Prisma to use the binary engine mode, which runs the query engine as a separate process and can work via emulation on Windows ARM64.
-
-## Resources
-
-React Router:
-
-- [React Router docs](https://reactrouter.com/home)
-
-Shopify:
-
-- [Intro to Shopify apps](https://shopify.dev/docs/apps/getting-started)
-- [Shopify App React Router docs](https://shopify.dev/docs/api/shopify-app-react-router)
-- [Shopify CLI](https://shopify.dev/docs/apps/tools/cli)
-- [Shopify App Bridge](https://shopify.dev/docs/api/app-bridge-library).
-- [Polaris Web Components](https://shopify.dev/docs/api/app-home/polaris-web-components).
-- [App extensions](https://shopify.dev/docs/apps/app-extensions/list)
-- [Shopify Functions](https://shopify.dev/docs/api/functions)
-
-Internationalization:
-
-- [Internationalizing your app](https://shopify.dev/docs/apps/best-practices/internationalization/getting-started)
+---
+*Documentation maintained for **ComplyGuard AI**.*

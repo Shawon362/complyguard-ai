@@ -17,16 +17,16 @@ export default function DeadlineCountdownCard({ daysLeft }) {
           borderRadius: "12px", padding: "24px", textAlign: "center",
         }}>
           <div style={{
-            fontSize: "56px", fontWeight: "900", lineHeight: "1",
-            color: daysLeft <= 30 ? "#DC2626" : daysLeft <= 90 ? "#D97706" : "#0284C7",
+            fontSize: daysLeft <= 0 ? "40px" : "56px", fontWeight: "900", lineHeight: "1.1",
+            color: daysLeft <= 0 ? "#DC2626" : daysLeft <= 30 ? "#DC2626" : daysLeft <= 90 ? "#D97706" : "#0284C7",
           }}>
-            {daysLeft}
+            {daysLeft <= 0 ? "NOW LIVE" : daysLeft}
           </div>
           <div style={{
             fontSize: "14px", fontWeight: "600", color: "#475569",
             marginTop: "8px", textTransform: "uppercase", letterSpacing: "1px",
           }}>
-            Days Remaining
+            {daysLeft <= 0 ? "Enforcement Active" : "Days Remaining"}
           </div>
           <div style={{
             marginTop: "16px", padding: "8px 16px",
