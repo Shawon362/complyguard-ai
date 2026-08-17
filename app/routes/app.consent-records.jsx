@@ -72,6 +72,8 @@ export default function ConsentRecords() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
+
+  function formatDate(dateString) {
     const d = new Date(dateString);
     return d.toLocaleString();
   }
