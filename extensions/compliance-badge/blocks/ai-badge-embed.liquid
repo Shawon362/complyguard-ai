@@ -1,14 +1,32 @@
 {% comment %}
   AI Badge Auto-Embed (App Embed)
   Merchant enables once - badge auto-injects on AI product pages
+  AND on collection/list pages (product cards).
 {% endcomment %}
 
+{% assign ai_ids = "" %}
+{% if collection and collection.products %}
+  {% for p in collection.products %}
+    {% if p.metafields.compliance.ai_generated %}
+      {% assign ai_ids = ai_ids | append: p.id | append: "," %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
 {% if template contains 'product' and product.metafields.compliance.ai_generated %}
+  {% assign cg_active = true %}
+{% elsif ai_ids != "" %}
+  {% assign cg_active = true %}
+{% endif %}
+
+{% if cg_active %}
   <div id="complyguard-badge-data"
        data-active="true"
        data-text="{{ block.settings.badge_text }}"
        data-bg="{{ block.settings.bg_color }}"
        data-color="{{ block.settings.text_color }}"
+       data-ai-ids="{{ ai_ids }}"
+       data-is-product="{% if template contains 'product' and product.metafields.compliance.ai_generated %}true{% else %}false{% endif %}"
        style="display:none;"></div>
 
   <script>
@@ -16,23 +34,36 @@
       var data = document.getElementById('complyguard-badge-data');
       if (!data || data.getAttribute('data-active') !== 'true') return;
 
-      function injectBadge() {
-        if (document.querySelector('.complyguard-auto-badge')) return;
+      var bg = data.getAttribute('data-bg');
+      var color = data.getAttribute('data-color');
+      var text = data.getAttribute('data-text');
+      var isProduct = data.getAttribute('data-is-product') === 'true';
+      var aiIds = (data.getAttribute('data-ai-ids') || '').split(',').filter(Boolean);
 
+      function injectStyles() {
+        if (document.getElementById('complyguard-badge-styles')) return;
         var style = document.createElement('style');
-        style.textContent = '.complyguard-media-wrap{position:relative;}'
+        style.id = 'complyguard-badge-styles';
+        style.textContent =
+          '.complyguard-media-wrap{position:relative;}'
           + '.complyguard-auto-badge{position:absolute;top:12px;left:12px;z-index:5;'
           + 'display:inline-flex;align-items:center;gap:5px;padding:5px 10px;'
-          + 'background:' + data.getAttribute('data-bg') + ';'
-          + 'color:' + data.getAttribute('data-color') + ';'
+          + 'background:' + bg + ';color:' + color + ';'
           + 'border-radius:20px;font-size:12px;font-weight:600;'
-          + 'box-shadow:0 2px 6px rgba(0,0,0,0.15);}';
+          + 'box-shadow:0 2px 6px rgba(0,0,0,0.15);pointer-events:none;}'
+          + '.complyguard-card-badge{top:8px;left:8px;padding:4px 8px;font-size:11px;}';
         document.head.appendChild(style);
+      }
 
+      function makeBadge(extraClass) {
         var badge = document.createElement('div');
-        badge.className = 'complyguard-auto-badge';
-        badge.innerHTML = '<span>\uD83E\uDD16</span><span>' + data.getAttribute('data-text') + '</span>';
+        badge.className = 'complyguard-auto-badge' + (extraClass ? ' ' + extraClass : '');
+        badge.innerHTML = '<span>\uD83E\uDD16</span><span>' + text + '</span>';
+        return badge;
+      }
 
+      function injectProductBadge() {
+        if (document.querySelector('.complyguard-auto-badge:not(.complyguard-card-badge)')) return;
         var candidates = document.querySelectorAll('.product__media, .product-single__photo, .product__media-item, .product-gallery__media, [class*="product"][class*="media"]');
         var mediaBox = null;
         for (var i = 0; i < candidates.length; i++) {
@@ -43,15 +74,63 @@
         }
         if (mediaBox) {
           mediaBox.classList.add('complyguard-media-wrap');
-          mediaBox.appendChild(badge);
-          return;
+          mediaBox.appendChild(makeBadge());
         }
       }
 
+      function injectCardBadges() {
+        if (aiIds.length === 0) return;
+        for (var i = 0; i < aiIds.length; i++) {
+          var id = aiIds[i];
+
+          // The theme repeats data-product-id on several elements per card
+          // (gallery, form, price). We ONLY want the image gallery element.
+          var galleries = document.querySelectorAll('.card-gallery[data-product-id="' + id + '"]');
+
+          for (var g = 0; g < galleries.length; g++) {
+            var gallery = galleries[g];
+            if (isProduct && gallery.closest('product-form-component')) continue;
+
+            // find the actual image box inside this gallery
+            var media = gallery.querySelector('.product-media');
+            if (!media) media = gallery;
+
+            if (media.querySelector('.complyguard-card-badge')) continue;
+            media.classList.add('complyguard-media-wrap');
+            media.appendChild(makeBadge('complyguard-card-badge'));
+          }
+
+          // Fallback: if theme has no .card-gallery, use the first non-form element
+          if (galleries.length === 0) {
+            var alt = document.querySelector('[data-product-id="' + id + '"]:not(product-form-component):not(product-price)');
+            if (alt && !alt.querySelector('.complyguard-card-badge') && !alt.closest('product-form-component')) {
+              var altMedia = alt.querySelector('.product-media, .card__media') || alt;
+              altMedia.classList.add('complyguard-media-wrap');
+              altMedia.appendChild(makeBadge('complyguard-card-badge'));
+            }
+          }
+        }
+      }
+
+      function run() {
+        injectStyles();
+        if (isProduct) injectProductBadge();
+        injectCardBadges();
+      }
+
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', injectBadge);
+        document.addEventListener('DOMContentLoaded', run);
       } else {
-        injectBadge();
+        run();
+      }
+
+      if (window.MutationObserver && aiIds.length > 0) {
+        var debounce;
+        var observer = new MutationObserver(function() {
+          clearTimeout(debounce);
+          debounce = setTimeout(injectCardBadges, 300);
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
       }
     })();
   </script>

@@ -10,6 +10,7 @@ import {
   EmptyState,
   IndexTable,
   Banner,
+  Button,
 } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 
@@ -47,9 +48,30 @@ export const loader = async ({ request }) => {
 // COMPONENT
 // ============================================================
 export default function ConsentRecords() {
-  const { records, total, acceptedCount, rejectedCount, ccpaCount, customCount, acceptRate, features } = useLoaderData();
-
-  function formatDate(dateString) {
+  function handleExportCSV() {
+    const headers = ["Record ID", "Date (UTC)", "Country", "Consent Type", "Necessary", "Analytics", "Marketing"];
+    const rows = records.map((r) => [
+      r.id,
+      new Date(r.createdAt).toISOString(),
+      r.country || "",
+      r.consentType || "",
+      r.necessary ? "Yes" : "No",
+      r.analytics ? "Yes" : "No",
+      r.marketing ? "Yes" : "No",
+    ]);
+    const csv = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\r\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `consent-records-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
     const d = new Date(dateString);
     return d.toLocaleString();
   }
@@ -62,7 +84,16 @@ export default function ConsentRecords() {
   }
 
   return (
-    <Page title="Consent Records" subtitle="Proof-of-consent log for GDPR / CCPA compliance" fullWidth>
+    <Page
+      title="Consent Records"
+      subtitle="Proof-of-consent log for GDPR / CCPA compliance"
+      primaryAction={{
+        content: "Export CSV",
+        onAction: handleExportCSV,
+        disabled: records.length === 0,
+      }}
+      fullWidth
+    >
       <BlockStack gap="500">
         {!features.consentAnalytics && (
           <Banner tone="info" title="Unlock consent analytics">
