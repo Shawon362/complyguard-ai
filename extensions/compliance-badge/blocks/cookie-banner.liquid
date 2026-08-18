@@ -19,6 +19,25 @@
     var data = document.getElementById('complyguard-cookie-data');
     if (!data) return;
 
+    // ── Google Consent Mode v2 — set default state (denied until consent) ──
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    window.gtag = window.gtag || gtag;
+
+    // If consent already saved, apply it; otherwise default everything to denied
+    var cgSaved = null;
+    try { cgSaved = JSON.parse(localStorage.getItem('complyguard_consent')); } catch (e) {}
+
+    gtag('consent', 'default', {
+      ad_storage: cgSaved && cgSaved.marketing ? 'granted' : 'denied',
+      ad_user_data: cgSaved && cgSaved.marketing ? 'granted' : 'denied',
+      ad_personalization: cgSaved && cgSaved.marketing ? 'granted' : 'denied',
+      analytics_storage: cgSaved && cgSaved.analytics ? 'granted' : 'denied',
+      functionality_storage: 'granted',
+      security_storage: 'granted',
+      wait_for_update: 500
+    });
+
     var bg = data.getAttribute('data-bg');
     var color = data.getAttribute('data-color');
     var accept = data.getAttribute('data-accept');
@@ -35,6 +54,18 @@
     function saveConsent(analytics, marketing, consentType) {
       var consent = { necessary: true, analytics: analytics, marketing: marketing, date: new Date().toISOString() };
       localStorage.setItem('complyguard_consent', JSON.stringify(consent));
+
+      // ── Google Consent Mode v2 — update on user choice ──
+      try {
+        if (window.gtag) {
+          window.gtag('consent', 'update', {
+            ad_storage: marketing ? 'granted' : 'denied',
+            ad_user_data: marketing ? 'granted' : 'denied',
+            ad_personalization: marketing ? 'granted' : 'denied',
+            analytics_storage: analytics ? 'granted' : 'denied'
+          });
+        }
+      } catch (e) {}
 
       try {
         var savedCountry = window.__complyguardCountry || null;

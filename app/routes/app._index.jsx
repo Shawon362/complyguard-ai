@@ -193,6 +193,8 @@ export const loader = async ({ request }) => {
     needsOnboarding,
     onboardingStep: merchant.onboardingStep || 0,
     planInfo,
+    consentCount,
+    merchantPlan: merchant.plan || "free",
   };
 };
 
@@ -307,7 +309,7 @@ export const action = async ({ request }) => {
 // UI COMPONENT — Dashboard Layout
 // ============================================================
 export default function ComplyGuardDashboard() {
-  const { shop, productCount, totalImages, lastScan, runningScan, needsOnboarding, onboardingStep, planInfo, healthChecks, passedChecks, healthScore } = useLoaderData();
+  const { shop, productCount, totalImages, lastScan, runningScan, needsOnboarding, onboardingStep, planInfo, healthChecks, passedChecks, healthScore, consentCount, merchantPlan } = useLoaderData();
   const actionData = useActionData();
   const submit = useSubmit();
   const navigation = useNavigation();
@@ -426,6 +428,49 @@ export default function ComplyGuardDashboard() {
             </BlockStack>
           </Box>
         </Card>
+
+        <Card>
+          <Box>
+            <BlockStack gap="300">
+              <BlockStack gap="100">
+                <Text as="h3" variant="headingSm">
+                  ⚡ Compliance Features
+                </Text>
+                <Text as="p" variant="bodySm" tone="subdued">
+                  Protections your store gets with ComplyGuard AI — features Shopify doesn't provide natively.
+                </Text>
+              </BlockStack>
+              <BlockStack gap="200">
+                <InlineStack gap="200" blockAlign="center">
+                  <Text as="span" variant="bodySm">✅</Text>
+                  <Text as="span" variant="bodySm" fontWeight="semibold">AI Image Disclosure</Text>
+                  <Text as="span" variant="bodySm" tone="subdued">EU AI Act Article 50 — badge on AI product images</Text>
+                </InlineStack>
+                <InlineStack gap="200" blockAlign="center">
+                  <Text as="span" variant="bodySm">✅</Text>
+                  <Text as="span" variant="bodySm" fontWeight="semibold">Cookie Consent Banner</Text>
+                  <Text as="span" variant="bodySm" tone="subdued">Granular Accept / Reject / Preferences</Text>
+                </InlineStack>
+                <InlineStack gap="200" blockAlign="center">
+                  <Text as="span" variant="bodySm">✅</Text>
+                  <Text as="span" variant="bodySm" fontWeight="semibold">Google Consent Mode v2</Text>
+                  <Text as="span" variant="bodySm" tone="subdued">Sends consent signals to Google Analytics / Ads</Text>
+                </InlineStack>
+                <InlineStack gap="200" blockAlign="center">
+                  <Text as="span" variant="bodySm">✅</Text>
+                  <Text as="span" variant="bodySm" fontWeight="semibold">Consent Audit Log</Text>
+                  <Text as="span" variant="bodySm" tone="subdued">{consentCount} consent record{consentCount === 1 ? "" : "s"} stored · CSV export ready</Text>
+                </InlineStack>
+                <InlineStack gap="200" blockAlign="center">
+                  <Text as="span" variant="bodySm">✅</Text>
+                  <Text as="span" variant="bodySm" fontWeight="semibold">CCPA "Do Not Sell"</Text>
+                  <Text as="span" variant="bodySm" tone="subdued">Opt-out option for US visitors</Text>
+                </InlineStack>
+              </BlockStack>
+            </BlockStack>
+          </Box>
+        </Card>
+
         <Card>
           <Box>
             <BlockStack gap="300">
