@@ -736,3 +736,138 @@ export function downloadComplianceReport(scan, shopName) {
 export async function downloadComplianceReportFromHTML(elementRef, scan) {
   downloadComplianceReport(scan, "Your Store");
 }
+
+// ============================================================
+// CONSENT AUDIT REPORT — GDPR Article 7 proof-of-consent
+// ============================================================
+export function downloadConsentReport(records, stats, shopName) {
+  const generatedOn = formatDate(new Date());
+
+  // Build table rows from consent records
+  const tableBody = [
+    [
+      { text: "Date (UTC)", fontSize: 8, bold: true, color: COLORS.white, fillColor: COLORS.primary, margin: [4, 5, 4, 5] },
+      { text: "Country", fontSize: 8, bold: true, color: COLORS.white, fillColor: COLORS.primary, margin: [4, 5, 4, 5] },
+      { text: "Choice", fontSize: 8, bold: true, color: COLORS.white, fillColor: COLORS.primary, margin: [4, 5, 4, 5] },
+      { text: "Analytics", fontSize: 8, bold: true, color: COLORS.white, fillColor: COLORS.primary, margin: [4, 5, 4, 5] },
+      { text: "Marketing", fontSize: 8, bold: true, color: COLORS.white, fillColor: COLORS.primary, margin: [4, 5, 4, 5] },
+    ],
+  ];
+
+  const typeLabel = {
+    accept_all: "Accepted all",
+    reject_all: "Rejected all",
+    ccpa_opt_out: "CCPA opt-out",
+    custom: "Custom",
+  };
+
+  records.forEach((r, idx) => {
+    const bg = idx % 2 === 0 ? COLORS.white : COLORS.bgLight;
+    tableBody.push([
+      { text: new Date(r.createdAt).toISOString().replace("T", " ").slice(0, 19), fontSize: 8, color: COLORS.text, fillColor: bg, margin: [4, 4, 4, 4] },
+      { text: r.country || "—", fontSize: 8, color: COLORS.text, fillColor: bg, margin: [4, 4, 4, 4] },
+      { text: typeLabel[r.consentType] || r.consentType || "—", fontSize: 8, color: COLORS.text, fillColor: bg, margin: [4, 4, 4, 4] },
+      { text: r.analytics ? "On" : "Off", fontSize: 8, color: r.analytics ? COLORS.success : COLORS.textLight, fillColor: bg, margin: [4, 4, 4, 4] },
+      { text: r.marketing ? "On" : "Off", fontSize: 8, color: r.marketing ? COLORS.success : COLORS.textLight, fillColor: bg, margin: [4, 4, 4, 4] },
+    ]);
+  });
+
+  const docDefinition = {
+    pageSize: "A4",
+    pageMargins: [40, 40, 40, 50],
+    content: [
+      // ── Header banner ──
+      {
+        table: {
+          widths: [40, "*"],
+          body: [[
+            { svg: ICONS.shield(COLORS.white), fit: [40, 40], border: [false, false, false, false], fillColor: COLORS.primary },
+            {
+              text: [
+                { text: "ComplyGuard AI\n", fontSize: 22, bold: true, color: COLORS.white },
+                { text: "Consent Audit Report", fontSize: 11, color: COLORS.white },
+              ],
+              margin: [12, 4, 0, 0],
+              border: [false, false, false, false],
+              fillColor: COLORS.primary,
+            },
+          ]],
+        },
+        layout: {
+          defaultBorder: false,
+          paddingTop: () => 22, paddingBottom: () => 22, paddingLeft: () => 30, paddingRight: () => 30,
+          fillColor: () => COLORS.primary,
+        },
+        margin: [-40, -40, -40, 30],
+      },
+
+      // ── Store info ──
+      { text: "PROOF-OF-CONSENT LOG FOR", fontSize: 9, color: COLORS.textLight, characterSpacing: 2, margin: [0, 0, 0, 4] },
+      { text: shopName || "Your Store", fontSize: 24, bold: true, color: COLORS.text, margin: [0, 0, 0, 6] },
+      { text: `Generated: ${generatedOn}`, fontSize: 10, color: COLORS.textLight, margin: [0, 0, 0, 2] },
+      { text: "GDPR Article 7(1) — demonstrable proof of consent", fontSize: 9, color: COLORS.textMuted, margin: [0, 0, 0, 25] },
+
+      // ── Stat boxes ──
+      {
+        columns: [
+          statBox(stats.total || 0, "TOTAL", COLORS.primary, ICONS.inbox(COLORS.primary)),
+          statBox(stats.acceptedCount || 0, "ACCEPTED", COLORS.success, ICONS.check(COLORS.success)),
+          statBox(stats.rejectedCount || 0, "REJECTED", COLORS.critical, ICONS.x(COLORS.critical)),
+          statBox(stats.ccpaCount || 0, "CCPA OPT-OUT", COLORS.warning, ICONS.alertOctagon(COLORS.warning)),
+        ],
+        columnGap: 8,
+      },
+
+      { text: "", margin: [0, 25, 0, 0] },
+
+      // ── Records table ──
+      { text: "Consent Records", fontSize: 14, bold: true, color: COLORS.text, margin: [0, 0, 0, 12] },
+      {
+        table: { headerRows: 1, widths: ["*", "auto", "auto", "auto", "auto"], body: tableBody },
+        layout: { defaultBorder: false, hLineWidth: () => 0.5, hLineColor: () => COLORS.borderLight },
+      },
+
+      { text: "", margin: [0, 20, 0, 0] },
+
+      // ── Disclaimer ──
+      {
+        table: {
+          widths: [22, "*"],
+          body: [[
+            { svg: ICONS.alertTriangle("#9A3412"), fit: [18, 18], margin: [0, 1, 0, 0], border: [false, false, false, false], fillColor: "#FFF7ED" },
+            {
+              stack: [
+                { text: "About This Report", fontSize: 12, bold: true, color: "#9A3412", margin: [0, 0, 0, 6] },
+                { text: "This report documents consent choices collected via your cookie banner, as required for GDPR Article 7 accountability. It is generated from data available at the time of export and is intended for compliance and audit purposes. ComplyGuard AI does not provide legal advice.", fontSize: 10, color: COLORS.text, lineHeight: 1.6 },
+              ],
+              border: [false, false, false, false], fillColor: "#FFF7ED",
+            },
+          ]],
+        },
+        layout: { defaultBorder: false, fillColor: () => "#FFF7ED", paddingTop: () => 14, paddingBottom: () => 14, paddingLeft: () => 16, paddingRight: () => 16 },
+        margin: [0, 0, 0, 20],
+      },
+
+      // ── Branding ──
+      {
+        text: [
+          { text: "Generated by ", fontSize: 10, color: COLORS.textLight },
+          { text: "ComplyGuard AI", fontSize: 10, bold: true, color: COLORS.primary },
+          { text: ` on ${generatedOn}`, fontSize: 10, color: COLORS.textLight },
+        ],
+        alignment: "center",
+        margin: [0, 16, 0, 0],
+      },
+    ],
+    footer: (currentPage, pageCount) => ({
+      columns: [
+        { text: "ComplyGuard AI — Consent Audit", fontSize: 8, color: COLORS.textMuted, margin: [40, 15, 0, 0] },
+        { text: `Page ${currentPage} of ${pageCount}`, fontSize: 8, color: COLORS.textMuted, alignment: "right", margin: [0, 15, 40, 0] },
+      ],
+    }),
+    defaultStyle: { font: "Roboto", fontSize: 10, color: COLORS.text },
+  };
+
+  const filename = `ComplyGuard-Consent-Audit-${new Date().toISOString().split("T")[0]}.pdf`;
+  pdfMake.createPdf(docDefinition).download(filename);
+}

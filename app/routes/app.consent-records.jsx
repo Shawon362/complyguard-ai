@@ -13,6 +13,7 @@ import {
   Button,
 } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
+import { downloadConsentReport } from "../utils/generatePDF";
 
 // ============================================================
 // LOADER — fetch consent records for this shop
@@ -75,9 +76,12 @@ export default function ConsentRecords() {
     URL.revokeObjectURL(url);
   }
 
-  function formatDate(dateString) {
-    const d = new Date(dateString);
-    return d.toLocaleString();
+  function handleExportPDF() {
+    downloadConsentReport(
+      records,
+      { total, acceptedCount, rejectedCount, ccpaCount, customCount },
+      "Your Store"
+    );
   }
 
   function typeBadge(type) {
@@ -92,10 +96,17 @@ export default function ConsentRecords() {
       title="Consent Records"
       subtitle="Proof-of-consent log for GDPR / CCPA compliance"
       primaryAction={{
-        content: "Export CSV",
-        onAction: handleExportCSV,
+        content: "Export PDF",
+        onAction: handleExportPDF,
         disabled: records.length === 0,
       }}
+      secondaryActions={[
+        {
+          content: "Export CSV",
+          onAction: handleExportCSV,
+          disabled: records.length === 0,
+        },
+      ]}
       fullWidth
     >
       <BlockStack gap="500">
