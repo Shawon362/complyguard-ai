@@ -51,6 +51,11 @@ export const loader = async ({ request }) => {
 export default function ConsentRecords() {
   const { records, total, acceptedCount, rejectedCount, ccpaCount, customCount, acceptRate, features } = useLoaderData();
 
+  function formatDate(dateString) {
+    const d = new Date(dateString);
+    return d.toLocaleString();
+  }
+
   function handleExportCSV() {
     const headers = ["Record ID", "Date (UTC)", "Country", "Consent Type", "Necessary", "Analytics", "Marketing"];
     const rows = records.map((r) => [
