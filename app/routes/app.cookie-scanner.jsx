@@ -9,6 +9,7 @@ import {
   Box,
   InlineStack,
   Badge,
+  TextField,
 } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 
@@ -44,7 +45,9 @@ export const action = async ({ request }) => {
   }
 
   const { scanStoreForTrackers } = await import("../utils/cookieScanner");
-  const result = await scanStoreForTrackers(shop);
+  const formData = await request.formData();
+  const targetUrl = formData.get("targetUrl")?.trim() || shop;
+  const result = await scanStoreForTrackers(targetUrl);
 
   return { result };
 };
@@ -82,9 +85,17 @@ export default function CookieScanner() {
                 Scan your storefront to see which tracking and analytics scripts are active. This helps you disclose them correctly in your cookie banner and privacy policy.
               </Text>
               <Form method="post">
-                <Button submit variant="primary" loading={scanning} size="large">
-                  {scanning ? "Scanning..." : "Scan My Store"}
-                </Button>
+                <BlockStack gap="300">
+                  <TextField
+                    label="Store URL to scan"
+                    name="targetUrl"
+                    placeholder="yourstore.myshopify.com (leave empty to scan your own)"
+                    autoComplete="off"
+                  />
+                  <Button submit variant="primary" loading={scanning} size="large">
+                    {scanning ? "Scanning..." : "Scan Store"}
+                  </Button>
+                </BlockStack>
               </Form>
             </BlockStack>
           </Card>
