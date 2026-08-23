@@ -1,4 +1,5 @@
 import { useLoaderData, useActionData, Form, useNavigation } from "react-router";
+import { useState } from "react";
 import {
   Page,
   Card,
@@ -62,6 +63,7 @@ export default function CookieScanner() {
   const scanning = navigation.state === "submitting";
 
   const result = actionData?.result;
+  const [targetUrl, setTargetUrl] = useState("");
 
   function categoryTone(cat) {
     if (cat === "Marketing") return "warning";
@@ -88,10 +90,12 @@ export default function CookieScanner() {
                 <BlockStack gap="300">
                   <TextField
                     label="Store URL to scan"
-                    name="targetUrl"
+                    value={targetUrl}
+                    onChange={setTargetUrl}
                     placeholder="yourstore.myshopify.com (leave empty to scan your own)"
                     autoComplete="off"
                   />
+                  <input type="hidden" name="targetUrl" value={targetUrl} />
                   <Button submit variant="primary" loading={scanning} size="large">
                     {scanning ? "Scanning..." : "Scan Store"}
                   </Button>
